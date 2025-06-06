@@ -1,0 +1,207 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Banner Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        #app-container {
+            background: #ffffff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #111;
+            margin-bottom: 2rem;
+        }
+        .control-group {
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        input[type="text"],
+        input[type="file"],
+        input[type="color"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        input[type="color"] {
+            height: 50px;
+            padding: 0.25rem;
+        }
+        button {
+            background-color: #0073b0;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #005a8c;
+        }
+        #result-container {
+            margin-top: 2rem;
+        }
+        #image-canvas {
+            max-width: 100%;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        #download-link {
+            display: none;
+            margin-top: 1rem;
+            background-color: #28a745;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        #download-link:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <h1>Image Banner Generator</h1>
+
+        <div class="control-group">
+            <label for="image-uploader">1. Upload your image (PNG or SVG)</label>
+            <input type="file" id="image-uploader" accept="image/png, image/svg+xml">
+        </div>
+
+        <div class="control-group">
+            <label for="text-input">2. Enter your text</label>
+            <input type="text" id="text-input" placeholder="e.g., Conference 2025">
+        </div>
+
+        <div class="control-group">
+            <label for="color-picker">3. Pick a banner color</label>
+            <input type="color" id="color-picker" value="#0073b0">
+        </div>
+
+        <button id="generate-btn">Generate Image</button>
+
+        <div id="result-container">
+            <canvas id="image-canvas"></canvas>
+            <a id="download-link" href="#" download="generated-image.png">Download Image</a>
+        </div>
+    </div>
+
+    <script>
+        // OECD Logo as a Base64 string to keep everything in one file
+        const oecdLogoBase64 = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NSA0MyI+CiAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTc2LjksMTYuMWgtNC40Yy0wLjUsMC0wLjksMC40LTAuOSwwLjl2MTQuMWMwLDAuNSwwLjQsMC45LDAuOSwwLjloNC40YzAuNSwwLDAuOS0wLjQsMC45LTAuOQoJIFYxNy4xQzc3LjksMTYuNiw3Ny40LDE2LjEsNzYuOSwxNi4xeiBNNTYuNCwzMS4xaC0yLjRjLTAuNCwwLTAuOC0wLjMyLTAuOC0wLjcyVjE3LjM2YzAtMC40LDAuMzItMC43MiwwLjgtMC43Mmg0LjM2CgkvPgogIDxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0zNi44LDE2LjZoNC40YzAuNSwwLDAuOSwwLjQsMC45LDAuOXYxMy4yYzAsMC41LTAuNCwwLjktMC45LDAuOWgtNC40Yy0wLjUsMC0wLjktMC40LTAuOS0wLjlWMTEuNAoJCWMtMC4xLTQuNi0zLjktOC4yLTguNS04LjFINDguMmMtNC42LDAtOC4zLDMuNy04LjMsOC4zYzAsMC4xLDAsMC4yLDAsMC4zdjIxLjdjMCw0LjYsMy43LDguMyw4LjMsOC4zaDEzLjJjNC42LDAsOC4zLTMuNyw4LjMtOC4zCgkJdi04LjFjMC4xLTAuNS0wLjMtMC45LTAuOC0wLjloLTYuMUMzNy4yLDI0LDM2LjgsMjQuMywzNi44LDI0LjdWMzBIMzFjLTAuNSwwLTAuOS0wLjQtMC45LTAuOXYtNC40YzAtMC41LDAtMC45LDAtMS40CgkJYzAtMi4yLTEuOC00LTQtNEgyMy40Yy0yLjIsMC00LDEuOC00LDR2NS44YzAsMi4yLDEuOCw0LDQsNGg1LjVjMC41LDAsMC45LDAuNCwwLjksMC45djEuNGMwLDAuNS0wLjQsMC45LTAuOSwwLjloLTUuNQoJCWMtMy4xLDAtNS43LTIuNS01LjctNS43di01LjhjMC0zLjEsMi41LTUuNyw1LjctNS43aDIuN2MyLjIsMCw0LTEuOCw0LTRWMTEuN2MwLTIuMi0xLjgtNC00LTRIMjMuNGMtMy4xLDAtNS43LDIuNS01LjctNS43CgkJYzAtMy4xLDIuNS01LjcsNS43LTUuN2gxNC45YzMuMSwwLDUuNywyLjUsNS43LDUuN1YzMGg2LjJjMC41LDAsMC45LTAuNCwwLjktMC45di0yLjFjMC0yLjIsMS44LTQsNC00aDIuN2MyLjIsMCw0LDEuOCw0LDQKCQljMCwwLDAsMC4xLDAsMC4xdjQuMWMwLDIuMi0xLjgsNC00LDRoLTUuNmMtMC41LDAtMC45LDMC40LTAuOSwwLjl2NC41YzAsMC41LDAuNCwwLjksMC45LDAuOWg1LjZjMy4xLDAsNS43LTIuNSw1LjctNS43CgkJdi00LjFjMC0zLjEtMi41LTUuNy01LjctNS43aC0yLjdjLTIuMiwwLTQtMS44LTQtNFYxNy4xYzAtMi4yLDEuOC00LDQtNGgyLjdjMy4xLDAsNS43LDIuNSw1LjcsNS43djEzLjdjMCwzLjEtMi41LDUuNy01LjcsNS43CgkJSDU2LjljLTMuMSwwLTUuNy0yLjUtNS43LTUuN1YxNy44YzAtMC4zLTAuMi0wLjUtMC41LTAuNWgtNS4xYy0wLjMsMC0wLjUsMC4yLTAuNSwwLjV2MTMuNWMwLDMuMS0yLjNSw1LjctNS43LDUuN2gtNC40CgkJYy0zLjEsMC01LjctMi41LTUuNy01LjdWMTcuMWMwLTMuMSwyLjUtNS43LDUuNy01LjdoNC40YzMuMSwwLDUuNywyLjUsNS43LDUuN1YxNnoiLz4KPC9zdmc+Cg==";
+
+        const imageUploader = document.getElementById('image-uploader');
+        const textInput = document.getElementById('text-input');
+        const colorPicker = document.getElementById('color-picker');
+        const generateBtn = document.getElementById('generate-btn');
+        const canvas = document.getElementById('image-canvas');
+        const ctx = canvas.getContext('2d');
+        const downloadLink = document.getElementById('download-link');
+
+        generateBtn.addEventListener('click', () => {
+            const file = imageUploader.files[0];
+            const text = textInput.value;
+            const color = colorPicker.value;
+
+            if (!file) {
+                alert("Please upload an image first.");
+                return;
+            }
+
+            if (!text.trim()) {
+                alert("Please enter some text for the banner.");
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                const userImage = new Image();
+                userImage.onload = () => {
+                    createImage(userImage, text, color);
+                };
+                userImage.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        function createImage(userImage, text, color) {
+            const bannerHeight = 100;
+            const logoPadding = 20;
+            const textPadding = 30;
+
+            // Set canvas dimensions
+            canvas.width = userImage.width;
+            canvas.height = userImage.height + bannerHeight;
+
+            // 1. Draw the user's uploaded image
+            ctx.drawImage(userImage, 0, 0);
+
+            // 2. Draw the banner background
+            ctx.fillStyle = color;
+            ctx.fillRect(0, userImage.height, canvas.width, bannerHeight);
+
+            // 3. Draw the OECD logo
+            const oecdLogo = new Image();
+            oecdLogo.onload = () => {
+                // Calculate logo dimensions to fit vertically in banner with padding
+                const logoMaxHeight = bannerHeight - (logoPadding * 2);
+                const logoAspectRatio = oecdLogo.width / oecdLogo.height;
+                const logoHeight = logoMaxHeight;
+                const logoWidth = logoHeight * logoAspectRatio;
+
+                const logoY = userImage.height + logoPadding;
+                const logoX = logoPadding;
+
+                ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
+            };
+            oecdLogo.src = oecdLogoBase64;
+
+            // 4. Draw the text
+            ctx.fillStyle = "#FFFFFF"; // White text is usually readable on colored backgrounds
+            ctx.font = "bold 40px Arial";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "middle";
+            const textX = canvas.width - textPadding;
+            const textY = userImage.height + (bannerHeight / 2);
+            ctx.fillText(text, textX, textY);
+
+            // 5. Make the download link available
+            downloadLink.href = canvas.toDataURL('image/png');
+            downloadLink.style.display = 'inline-block';
+        }
+    </script>
+</body>
+</html>
