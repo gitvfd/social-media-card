@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,6 +17,8 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
         }
         #app-container {
             background: #ffffff;
@@ -44,20 +44,17 @@
         }
         input[type="text"],
         input[type="file"],
-        input[type="color"] {
+        select {
             width: 100%;
             padding: 0.75rem;
             border: 1px solid #ccc;
             border-radius: 6px;
             box-sizing: border-box;
             font-size: 1rem;
+            background-color: white;
         }
         input[type="text"] {
             font-family: 'Noto Sans Display', sans-serif;
-        }
-        input[type="color"] {
-            height: 50px;
-            padding: 0.25rem;
         }
         button {
             background-color: #0073b0;
@@ -115,7 +112,19 @@
 
         <div class="control-group">
             <label for="color-picker">3. Pick a banner color</label>
-            <input type="color" id="color-picker" value="#0073b0">
+            <select id="color-picker">
+                <option value="#591C37">Plum</option>
+                <option value="#3A0C12">Burgundy</option>
+                <option value="#FFDDBD">Orange</option>
+                <option value="#FFD15C">Yellow</option>
+                <option value="#183F15">Forest Green</option>
+                <option value="#F2FF25">Grassy Green</option>
+                <option value="#00292E">Turquoise</option>
+                <option value="#001C37">Ocean</option>
+                <option value="#D7EDFE">Sky</option>
+                <option value="#3A062D">Berry</option>
+                <option value="#FCEEFB">Lilac</option>
+            </select>
         </div>
 
         <button id="generate-btn">Generate Image</button>
@@ -135,6 +144,9 @@
         const ctx = canvas.getContext('2d');
         const downloadLink = document.getElementById('download-link');
 
+        // MODIFIED: Define which colors should use the black logo for better contrast.
+        const colorsForBlackLogo = new Set(['#FFDDBD', '#FFD15C', '#F2FF25', '#D7EDFE', '#FCEEFB']);
+
         generateBtn.addEventListener('click', () => {
             const file = imageUploader.files[0];
             const text = textInput.value;
@@ -144,14 +156,12 @@
                 alert("Please upload an image first.");
                 return;
             }
-
             if (!text.trim()) {
                 alert("Please enter some text for the banner.");
                 return;
             }
 
             const reader = new FileReader();
-
             reader.onload = (e) => {
                 const userImage = new Image();
                 userImage.onload = () => {
@@ -165,7 +175,6 @@
                 };
                 userImage.src = e.target.result;
             };
-
             reader.readAsDataURL(file);
         });
 
@@ -178,19 +187,13 @@
             canvas.height = userImage.height + bannerHeight;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Draw initial elements
             ctx.drawImage(userImage, 0, 0);
             ctx.fillStyle = color;
             ctx.fillRect(0, userImage.height, canvas.width, bannerHeight);
 
-            // Start loading the logo
             const oecdLogo = new Image();
-            
-            // --- FIX IS HERE ---
-            // All subsequent drawing steps are now INSIDE oecdLogo.onload
             oecdLogo.onload = () => {
-                // Step 1: Draw the logo
-                const logoMaxHeight = 50;
+                const logoMaxHeight = 60;
                 const logoAspectRatio = oecdLogo.width / oecdLogo.height;
                 const logoHeight = logoMaxHeight;
                 const logoWidth = logoHeight * logoAspectRatio;
@@ -198,25 +201,27 @@
                 const logoX = logoPadding;
                 ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
 
-                // Step 2: Draw the text
-                ctx.fillStyle = "#000000"; // Black text
+                // For dark backgrounds, text is white. For bright backgrounds, text is black.
+                const textColor = colorsForBlackLogo.has(color) ? '#000000' : '#FFFFFF';
+                ctx.fillStyle = textColor;
                 ctx.font = useFallbackFont ? "34px Arial" : "34px 'Noto Sans Display'";
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 const textX = canvas.width - textPadding;
                 const textY = userImage.height + (bannerHeight / 2);
-                ctx.fillText(text, textX, textY);
+                ctx.fillText(text.toUpperCase(), textX, textY);
 
-                // Step 3: Now that everything is drawn, create and show the download link
                 downloadLink.href = canvas.toDataURL('image/png');
                 downloadLink.style.display = 'inline-block';
             };
 
             oecdLogo.onerror = () => {
-                alert("Error: Could not load the logo. Make sure the 'logo/oecd.svg' file exists.");
+                alert("Error: Could not load the logo. Make sure the 'logo' folder exists and contains 'oecd_white.svg' and 'oecd_black.svg'. Also ensure you are running this from a local server.");
             };
-            
-            oecdLogo.src = 'logo/OECD_20cm_blue_notag.svg';
+
+            // MODIFIED: Logic to choose the logo based on the selected color
+            let logoPath = colorsForBlackLogo.has(color) ? 'logo/OECD_20cm_blue_notag.svg' : 'logo/OECD logo FR White no tagline.svg';
+            oecdLogo.src = logoPath;
         }
     </script>
 </body>
