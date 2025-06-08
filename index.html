@@ -204,12 +204,12 @@
                 // For dark backgrounds, text is white. For bright backgrounds, text is black.
                 const textColor = colorsForBlackLogo.has(color) ? '#000000' : '#FFFFFF';
                 ctx.fillStyle = textColor;
-                ctx.font = useFallbackFont ? "34px Arial" : "34px 'Noto Sans Display'";
+                ctx.font = useFallbackFont ? "34px Arial" : "bold 32px 'Noto Sans Display'";
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 const textX = canvas.width - textPadding;
                 const textY = userImage.height + (bannerHeight / 2);
-                ctx.fillText(text.toUpperCase(), textX, textY);
+                ctx.fillText(text, textX, textY);
 
                 downloadLink.href = canvas.toDataURL('image/png');
                 downloadLink.style.display = 'inline-block';
