@@ -232,10 +232,10 @@
                 const textLeftX = canvas.width - textPadding - textMetrics.width;
 
                 // Check for overlap, with a 20px buffer for safety
-                if (textLeftX < logoRightX + 20) {
+                if (textLeftX < logoRightX + 40) {
                     // Overlap detected: draw on two lines, top-aligned
                     ctx.textBaseline = 'top';
-                    const lineHeight = 25;
+                    const lineHeight = 30;
                     // Calculate Y position to vertically center the two-line block
                     const blockHeight = lineHeight * 2;
                     const topPaddingForBlock = (bannerHeight - blockHeight) / 2;
