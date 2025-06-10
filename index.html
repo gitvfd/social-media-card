@@ -213,6 +213,7 @@
 
                 
                 // --- MODIFIED LOGIC FOR TEXT DRAWING ---
+               const textColor = colorsForBlackLogo.has(color) ? '#000000' : '#FFFFFF';
                  ctx.fillStyle = textColor;
                 ctx.fillStyle = textColor; // Use white text for the source
                 ctx.font = useFallbackFont ? "30px Arial" : "bold 30px 'Noto Sans Display'";
