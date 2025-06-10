@@ -126,7 +126,13 @@
                 <option value="#FCEEFB">Lilac</option>
             </select>
         </div>
-
+       <div class="control-group">
+            <label for="lang-picker">4. Choose a language</label>
+            <select id="lang-picker">
+                <option value="en" selected>English</option>
+                <option value="fr">French</option>
+            </select>
+        </div>
         <button id="generate-btn">Generate Image</button>
 
         <div id="result-container">
@@ -227,7 +233,7 @@
                 if (textLeftX < logoRightX + 20) {
                     // Overlap detected: draw on two lines, top-aligned
                     ctx.textBaseline = 'top';
-                    const lineHeight = 18;
+                    const lineHeight = 22;
                     // Calculate Y position to vertically center the two-line block
                     const blockHeight = lineHeight * 2;
                     const topPaddingForBlock = (bannerHeight - blockHeight) / 2;
@@ -269,8 +275,20 @@
             };
 
             // MODIFIED: Logic to choose the logo based on the selected color
+
+
+            /*
             let logoPath = colorsForBlackLogo.has(color) ? 'logo/OECD_20cm_blue_notag.svg' : 'logo/OECD logo EN White no tagline.svg';
             oecdLogo.src = logoPath;
+*/
+             const isLight = isColorLight(color);
+            let logoSrc = '';
+            if (lang === 'fr') {
+                logoSrc = colorsForBlackLogo.has(color)  ? oecdLogoFR_black_Base64 : oecdLogoFR_white_Base64;
+            } else { // Default to English
+                logoSrc = colorsForBlackLogo.has(color)  ? oecdLogoEN_black_Base64 : oecdLogoEN_white_Base64;
+            }
+            oecdLogo.src = logoSrc;
         }
     </script>
 </body>
