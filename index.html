@@ -231,8 +231,8 @@
                 const logoRightX = logoX + logoWidth;
                 const textLeftX = canvas.width - textPadding - textMetrics.width;
 
-                // Check for overlap, with a 35px buffer for safety
-                if (textLeftX < logoRightX + 35) {
+                // Check for overlap, with a 40px buffer for safety
+                if (textLeftX < logoRightX + 40) {
                     // Overlap detected: draw on two lines, top-aligned
                     ctx.textBaseline = 'top';
                     const lineHeight = 35;
