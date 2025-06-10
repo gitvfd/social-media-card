@@ -241,10 +241,10 @@
                     const splitPoint = text.lastIndexOf(' ', middle);
 
                     if (splitPoint !== -1) { // Found a space, so split into two lines
-                        line1 = text.substring(0, splitPoint).toUpperCase();
-                        line2 = text.substring(splitPoint + 1).toUpperCase();
+                        line1 = text.substring(0, splitPoint);
+                        line2 = text.substring(splitPoint + 1);
                     } else { // No space found, draw as a single line anyway
-                        line1 = text.toUpperCase();
+                        line1 = text;
                     }
 
                     ctx.fillText(line1, canvas.width - textPadding, textY1);
