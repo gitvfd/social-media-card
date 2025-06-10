@@ -280,13 +280,12 @@
             /*
             let logoPath = colorsForBlackLogo.has(color) ? 'logo/OECD_20cm_blue_notag.svg' : 'logo/OECD logo EN White no tagline.svg';
             oecdLogo.src = logoPath;
-*/
-             const isLight = isColorLight(color);
+            */
             let logoSrc = '';
             if (lang === 'fr') {
-                logoSrc = colorsForBlackLogo.has(color)  ? oecdLogoFR_black_Base64 : oecdLogoFR_white_Base64;
+                logoSrc = colorsForBlackLogo.has(color)  ? 'logo/OCDE_logo_fr.svg' : 'logo/OECD logo FR White no tagline.svg';
             } else { // Default to English
-                logoSrc = colorsForBlackLogo.has(color)  ? oecdLogoEN_black_Base64 : oecdLogoEN_white_Base64;
+                logoSrc = colorsForBlackLogo.has(color)  ? 'logo/OECD_20cm_blue_notag.svg' : 'logo/OECD logo EN White no tagline.svg';
             }
             oecdLogo.src = logoSrc;
         }
