@@ -193,7 +193,7 @@
 
             const oecdLogo = new Image();
             oecdLogo.onload = () => {
-                const logoMaxHeight = 55;
+                const logoMaxHeight = 50;
                 const logoAspectRatio = oecdLogo.width / oecdLogo.height;
                 const logoHeight = logoMaxHeight;
                 const logoWidth = logoHeight * logoAspectRatio;
@@ -202,15 +202,63 @@
                 ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
 
                 // For dark backgrounds, text is white. For bright backgrounds, text is black.
-                const textColor = colorsForBlackLogo.has(color) ? '#000000' : '#FFFFFF';
+               /* const textColor = colorsForBlackLogo.has(color) ? '#000000' : '#FFFFFF';
                 ctx.fillStyle = textColor;
                 ctx.font = useFallbackFont ? "30px Arial" : "bold 30px 'Noto Sans Display'";
                 ctx.textAlign = "right";
                 ctx.textBaseline = "middle";
                 const textX = canvas.width - textPadding;
                 const textY = userImage.height + (bannerHeight / 2);
-                ctx.fillText(text, textX, textY);
+                ctx.fillText(text, textX, textY);*/
 
+                
+                // --- MODIFIED LOGIC FOR TEXT DRAWING ---
+                 ctx.fillStyle = textColor;
+                ctx.fillStyle = textColor; // Use white text for the source
+                ctx.font = useFallbackFont ? "30px Arial" : "bold 30px 'Noto Sans Display'";
+                ctx.textAlign = "right";
+
+                const textMetrics = ctx.measureText(text);
+                const logoRightX = logoX + logoWidth;
+                const textLeftX = canvas.width - textPadding - textMetrics.width;
+
+                // Check for overlap, with a 20px buffer for safety
+                if (textLeftX < logoRightX + 20) {
+                    // Overlap detected: draw on two lines, top-aligned
+                    ctx.textBaseline = 'top';
+                    const lineHeight = 18;
+                    // Calculate Y position to vertically center the two-line block
+                    const blockHeight = lineHeight * 2;
+                    const topPaddingForBlock = (bannerHeight - blockHeight) / 2;
+                    const textY1 = userImage.height + topPaddingForBlock;
+
+                    let line1 = '';
+                    let line2 = '';
+
+                    // Find the last space before the middle of the string to split
+                    const middle = Math.floor(text.length / 2);
+                    const splitPoint = text.lastIndexOf(' ', middle);
+
+                    if (splitPoint !== -1) { // Found a space, so split into two lines
+                        line1 = text.substring(0, splitPoint).toUpperCase();
+                        line2 = text.substring(splitPoint + 1).toUpperCase();
+                    } else { // No space found, draw as a single line anyway
+                        line1 = text.toUpperCase();
+                    }
+
+                    ctx.fillText(line1, canvas.width - textPadding, textY1);
+                    if (line2) {
+                        ctx.fillText(line2, canvas.width - textPadding, textY1 + lineHeight);
+                    }
+
+                } else {
+                    // No overlap: draw as a single line, vertically centered
+                    ctx.textBaseline = 'middle';
+                    const textY = userImage.height + (bannerHeight / 2);
+                    ctx.fillText(text, canvas.width - textPadding, textY);
+                }
+
+               // ------------------END NEW TEXT
                 downloadLink.href = canvas.toDataURL('image/png');
                 downloadLink.style.display = 'inline-block';
             };
