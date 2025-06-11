@@ -113,12 +113,14 @@
         <div class="control-group">
             <label for="color-picker">3. Pick a banner color</label>
             <select id="color-picker">
+                <option value="#101D40">Midnight</option>
+                <option value="#E0F2FF">Light blue</option>
                 <option value="#591C37">Plum</option>
                 <option value="#3A0C12">Burgundy</option>
                 <option value="#FFDDBD">Orange</option>
                 <option value="#FFD15C">Yellow</option>
                 <option value="#183F15">Forest Green</option>
-                <option value="#F2FF25">Grassy Green</option>
+                <option value="#F2FFE5">Grassy Green</option>
                 <option value="#00292E">Turquoise</option>
                 <option value="#001C37">Ocean</option>
                 <option value="#D7EDFE">Sky</option>
@@ -152,7 +154,7 @@
         const downloadLink = document.getElementById('download-link');
  let lang;
         // MODIFIED: Define which colors should use the black logo for better contrast.
-        const colorsForBlackLogo = new Set(['#FFDDBD', '#FFD15C', '#F2FF25', '#D7EDFE', '#FCEEFB']);
+        const colorsForBlackLogo = new Set(['#E0F2FF','#FFDDBD', '#FFD15C', '#F2FF25', '#D7EDFE', '#FCEEFB']);
 
         generateBtn.addEventListener('click', () => {
             const file = imageUploader.files[0];
