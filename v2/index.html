@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Banner Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        background-color: #f4f7f6;
+        color: #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
+        padding: 1rem;
+        box-sizing: border-box;
+      }
+      #app-container {
+        background: #ffffff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 500px;
+        text-align: center;
+      }
+      h1 {
+        color: #111;
+        margin-bottom: 2rem;
+      }
+      .control-group {
+        margin-bottom: 1.5rem;
+        text-align: left;
+      }
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+      .annotation {
+        font-weight: 100;
+        font-size: 0.8rem;
+      }
+      input[type="text"],
+      input[type="file"],
+      select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 1rem;
+        background-color: white;
+      }
+      input[type="text"] {
+        font-family: "Noto Sans Display", sans-serif;
+      }
+      button {
+        background-color: #0073b0;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        width: 100%;
+      }
+      button:hover {
+        background-color: #005a8c;
+      }
+      #result-container {
+        margin-top: 2rem;
+      }
+      #image-canvas {
+        max-width: 100%;
+        border-radius: 8px;
+        border: 1px solid #eee;
+      }
+      #download-link {
+        display: none;
+        margin-top: 1rem;
+        background-color: #28a745;
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background-color 0.3s;
+      }
+      #download-link:hover {
+        background-color: #218838;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-container">
+      <h1>OECD social media chart banner Generator</h1>
+
+      <div class="control-group">
+        <label for="image-uploader"
+          >1. Upload your image (PNG or SVG)
+          <span class="annotation">width : 600px / height : 700px</span></label
+        >
+        <input
+          type="file"
+          id="image-uploader"
+          accept="image/png, image/svg+xml"
+        />
+      </div>
+
+      <div class="control-group">
+        <label for="title-input">2. Title (Optional)</label>
+        <input
+          type="text"
+          id="title-input"
+          placeholder="e.g., Economic Outlook"
+        />
+      </div>
+
+      <div class="control-group">
+        <label for="subtitle-input">3. Subtitle (Optional)</label>
+        <input
+          type="text"
+          id="subtitle-input"
+          placeholder="e.g., Interim Report March 2025"
+        />
+      </div>
+
+      <div class="control-group">
+        <label for="text-input"
+          >4. Enter your text
+          <span class="annotation">max ≈100 characters</span></label
+        >
+        <input
+          type="text"
+          id="text-input"
+          placeholder="e.g., Interim Economic Outlook 2025 "
+        />
+      </div>
+
+      <div class="control-group">
+        <label for="color-picker">5. Pick a banner color</label>
+        <select id="color-picker">
+          <option value="#101D40">Midnight</option>
+          <option value="#E0F2FF">Light blue</option>
+          <option value="#591C37">Plum</option>
+          <option value="#3A0C12">Burgundy</option>
+          <option value="#FFDDBD">Orange</option>
+          <option value="#FFD15C">Yellow</option>
+          <option value="#183F15">Forest Green</option>
+          <option value="#F2FFE5">Grassy Green</option>
+          <option value="#00292E">Turquoise</option>
+          <option value="#001C37">Ocean</option>
+          <option value="#D7EDFE">Sky</option>
+          <option value="#3A062D">Berry</option>
+          <option value="#FCEEFB">Lilac</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label for="lang-picker">6. Choose a language</label>
+        <select id="lang-picker">
+          <option value="en" selected>English</option>
+          <option value="fr">French</option>
+        </select>
+      </div>
+      <button id="generate-btn">Generate Image</button>
+
+      <div id="result-container">
+        <canvas id="image-canvas"></canvas>
+        <a id="download-link" href="#">Download Image</a>
+      </div>
+    </div>
+
+    <script>
+      const imageUploader = document.getElementById("image-uploader");
+      const titleInput = document.getElementById("title-input");
+      const subtitleInput = document.getElementById("subtitle-input");
+      const textInput = document.getElementById("text-input");
+      const colorPicker = document.getElementById("color-picker");
+      const langPicker = document.getElementById("lang-picker");
+      const generateBtn = document.getElementById("generate-btn");
+      const canvas = document.getElementById("image-canvas");
+      const ctx = canvas.getContext("2d");
+      const downloadLink = document.getElementById("download-link");
+
+      const colorsForBlackLogo = new Set([
+        "#E0F2FF",
+        "#FFDDBD",
+        "#FFD15C",
+        "#F2FFE5",
+        "#D7EDFE",
+        "#FCEEFB",
+      ]);
+
+      // FIXED: Added the missing getWrappedLines function
+      function getWrappedLines(text, maxWidth, font) {
+        ctx.font = font;
+        const words = text.split(" ");
+        let line = "";
+        const lines = [];
+        for (const word of words) {
+          const testLine = line + word + " ";
+          if (ctx.measureText(testLine).width > maxWidth && line.length > 0) {
+            lines.push(line.trim());
+            line = word + " ";
+          } else {
+            line = testLine;
+          }
+        }
+        if (line.length > 0) lines.push(line.trim());
+        return lines;
+      }
+
+      generateBtn.addEventListener("click", () => {
+        const file = imageUploader.files[0];
+        const title = titleInput.value.trim();
+        const subtitle = subtitleInput.value.trim();
+        const text = textInput.value;
+        const lang = langPicker.value;
+        const color = colorPicker.value;
+
+        if (!file) {
+          alert("Please upload an image first.");
+          return;
+        }
+        if (!text.trim()) {
+          alert("Please enter some text for the banner.");
+          return;
+        }
+
+        const originalFilename = file.name;
+        const nameWithoutExtension =
+          originalFilename.substring(0, originalFilename.lastIndexOf(".")) ||
+          originalFilename;
+        const newFilename = `${nameWithoutExtension}_SM.png`;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const userImage = new Image();
+          userImage.onload = () => {
+            // FIXED: Load all required font weights
+            Promise.all([
+              document.fonts.load("700 42px 'Noto Sans Display'"),
+              document.fonts.load("400 28px 'Noto Sans Display'"),
+              document.fonts.load("700 30px 'Noto Sans Display'"),
+            ])
+              .then(() => {
+                // FIXED: Pass all arguments in the correct order
+                createImage(
+                  userImage,
+                  title,
+                  subtitle,
+                  text,
+                  color,
+                  lang,
+                  newFilename
+                );
+              })
+              .catch((err) => {
+                console.error("Font could not be loaded: ", err);
+                alert(
+                  "Could not load the custom font. Using Arial as a fallback."
+                );
+                // FIXED: Pass all arguments in the correct order for the fallback
+                createImage(
+                  userImage,
+                  title,
+                  subtitle,
+                  text,
+                  color,
+                  lang,
+                  newFilename,
+                  true
+                );
+              });
+          };
+          userImage.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      function createImage(
+        userImage,
+        title,
+        subtitle,
+        text,
+        color,
+        lang,
+        newFilename,
+        useFallbackFont = false
+      ) {
+        const bottomBannerHeight = 100;
+        const logoPadding = 75;
+        const textPadding = 75;
+        const sidePadding = 75; // FIXED: Defined sidePadding
+
+        let topBannerHeight = 0;
+        let titleLines = [];
+        let subtitleLines = [];
+        if (title || subtitle) {
+          const topPadding = 25;
+          const bottomPadding = 25;
+          const titleLineHeight = 50;
+          const subtitleLineHeight = 34;
+          const spacing = 15;
+          const maxWidth = userImage.width - sidePadding * 2;
+          const titleFont = useFallbackFont
+            ? "bold 42px Arial"
+            : "700 42px 'Noto Sans Display'";
+          const subtitleFont = useFallbackFont
+            ? "400 28px Arial"
+            : "400 28px 'Noto Sans Display'";
+
+          if (title) {
+            titleLines = getWrappedLines(title, maxWidth, titleFont);
+          }
+          if (subtitle) {
+            subtitleLines = getWrappedLines(subtitle, maxWidth, subtitleFont);
+          }
+
+          const titleBlockHeight = title
+            ? titleLines.length * titleLineHeight
+            : 0;
+          const subtitleBlockHeight = subtitle
+            ? subtitleLines.length * subtitleLineHeight
+            : 0;
+          const spacingHeight = title && subtitle ? spacing : 0;
+
+          topBannerHeight =
+            topPadding +
+            titleBlockHeight +
+            spacingHeight +
+            subtitleBlockHeight +
+            bottomPadding;
+        }
+
+        canvas.width = userImage.width;
+        canvas.height = topBannerHeight + userImage.height + bottomBannerHeight;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const isLight = colorsForBlackLogo.has(color);
+        const contentColor = isLight ? "#000000" : "#FFFFFF"; // FIXED: Defined contentColor
+
+        if (topBannerHeight > 0) {
+          ctx.fillStyle = color;
+          ctx.fillRect(0, 0, canvas.width, topBannerHeight);
+          ctx.fillStyle = contentColor;
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+
+          let currentY = 25;
+          if (title) {
+            ctx.font = useFallbackFont
+              ? "bold 42px Arial"
+              : "700 42px 'Noto Sans Display'";
+            titleLines.forEach((line) => {
+              ctx.fillText(line, sidePadding, currentY);
+              currentY += 50;
+            });
+          }
+          if (subtitle) {
+            if (title) currentY += 15;
+            ctx.font = useFallbackFont
+              ? "400 28px Arial"
+              : "400 28px 'Noto Sans Display'";
+            subtitleLines.forEach((line) => {
+              ctx.fillText(line, sidePadding, currentY);
+              currentY += 34;
+            });
+          }
+        }
+
+        // FIXED: Draw user image *after* the top banner, shifted down by its height
+        ctx.drawImage(userImage, 0, topBannerHeight);
+
+        // FIXED: All bottom banner coordinates are now relative to its new position
+        const bottomBannerY = topBannerHeight + userImage.height;
+        ctx.fillStyle = color;
+        ctx.fillRect(0, bottomBannerY, canvas.width, bottomBannerHeight);
+
+        const oecdLogo = new Image();
+        oecdLogo.onload = () => {
+          const logoMaxHeight = 50;
+          const logoAspectRatio = oecdLogo.width / oecdLogo.height;
+          const logoHeight = logoMaxHeight;
+          const logoWidth = logoHeight * logoAspectRatio;
+          const logoY = bottomBannerY + (bottomBannerHeight - logoHeight) / 2;
+          const logoX = logoPadding;
+          ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
+
+          ctx.fillStyle = contentColor; // Use the same dynamic color for bottom text
+          ctx.font = useFallbackFont
+            ? "30px Arial"
+            : "bold 30px 'Noto Sans Display'";
+
+          ctx.textAlign = "right";
+
+          const textMetrics = ctx.measureText(text);
+          const logoRightX = logoX + logoWidth;
+          const textLeftX = canvas.width - textPadding - textMetrics.width;
+
+          if (textLeftX < logoRightX + 40) {
+            ctx.textBaseline = "top";
+            const lineHeight = 35;
+            const blockHeight = lineHeight * 2;
+            const topPaddingForBlock = (bottomBannerHeight - blockHeight) / 2;
+            const textY1 = bottomBannerY + topPaddingForBlock;
+
+            let line1 = "",
+              line2 = "";
+            const middle = Math.floor(text.length / 2);
+            const splitPoint = text.lastIndexOf(" ", middle);
+
+            if (splitPoint !== -1) {
+              line1 = text.substring(0, splitPoint);
+              line2 = text.substring(splitPoint + 1);
+            } else {
+              line1 = text;
+            }
+
+            ctx.fillText(line1, canvas.width - textPadding, textY1);
+            if (line2) {
+              ctx.fillText(
+                line2,
+                canvas.width - textPadding,
+                textY1 + lineHeight
+              );
+            }
+          } else {
+            ctx.textBaseline = "middle";
+            const textY = bottomBannerY + bottomBannerHeight / 2;
+            ctx.fillText(text, canvas.width - textPadding, textY);
+          }
+
+          downloadLink.download = newFilename;
+          downloadLink.href = canvas.toDataURL("image/png");
+          downloadLink.style.display = "inline-block";
+        };
+
+        oecdLogo.onerror = () => {
+          alert(
+            "Error: Could not load the logo. Please try refreshing the page."
+          );
+        };
+
+        let logoSrc = "";
+        if (lang === "fr") {
+          logoSrc = colorsForBlackLogo.has(color)
+            ? "logo/OCDE_logo_fr.svg"
+            : "logo/OECD logo FR White no tagline.svg";
+        } else {
+          // Default to English
+          logoSrc = colorsForBlackLogo.has(color)
+            ? "logo/OECD_20cm_blue_notag.svg"
+            : "logo/OECD logo EN White no tagline.svg";
+        }
+        oecdLogo.src = logoSrc;
+      }
+    </script>
+  </body>
+</html>
