@@ -330,7 +330,7 @@
         let currentX = x;
         ctx.save();
         ctx.textBaseline = "top";
-        ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+        ctx.font = `500 ${fontSize}px "${fontFamily}"`;
 
         parts.forEach((part, index) => {
           const isHighlighted = index % 2 === 1;
@@ -416,7 +416,7 @@
               leftPadding,
               currentY,
               titleSize,
-              "Noto Sans Display", // Pass the name directly
+              "Noto Sans Display SemiCondensed", // Pass the name directly
               "#101D40",
               highlightColor
             );
@@ -427,7 +427,7 @@
             // --- MODIFIED ---: The font name is now hardcoded with double quotes for maximum compatibility.
             ctx.font = useFallbackFont
               ? `500 ${subtitleSize}px Arial`
-              : `500 ${subtitleSize}px "Noto Sans Display"`;
+              : `400 ${subtitleSize}px "Noto Sans Display SemiCondensed"`;
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
