@@ -7,10 +7,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@300&display=swap"
-      rel="stylesheet"
-    />
-    <link
       href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@400;700&family=Noto+Sans+Display+SemiCondensed:wght@500;700&display=swap"
       rel="stylesheet"
     />
@@ -45,14 +41,24 @@
         margin-bottom: 1.5rem;
         text-align: left;
       }
+      .inline-label {
+        display: inline-block;
+        vertical-align: middle;
+      }
+      input[type="checkbox"] {
+        width: auto;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
       label {
         display: block;
         margin-bottom: 0.5rem;
         font-weight: 600;
       }
       .annotation {
-        font-weight: 100;
+        font-weight: 300;
         font-size: 0.8rem;
+        color: #555;
       }
       input[type="text"],
       input[type="file"],
@@ -112,6 +118,44 @@
       <h1>OECD social media chart banner Generator</h1>
 
       <div class="control-group">
+        <input type="checkbox" id="add-top-banner-checkbox" />
+        <label for="add-top-banner-checkbox" class="inline-label"
+          >Add top banner with title/subtitle</label
+        >
+      </div>
+
+      <div id="top-banner-controls" style="display: none">
+        <div class="control-group">
+          <label for="title-input"
+            >Title
+            <span class="annotation"
+              >Use *...* to mark text for color, e.g., Title with *colored*
+              text</span
+            ></label
+          >
+          <input
+            type="text"
+            id="title-input"
+            placeholder="e.g., Chart of the Week"
+          />
+        </div>
+        <div class="control-group">
+          <label for="highlight-color-picker">Color for highlighted text</label>
+          <select id="highlight-color-picker">
+            <option value="#156df9">Highlight Blue</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="subtitle-input">Subtitle</label>
+          <input
+            type="text"
+            id="subtitle-input"
+            placeholder="e.g., September 2025"
+          />
+        </div>
+      </div>
+
+      <div class="control-group">
         <label for="image-uploader"
           >1. Upload your image (PNG or SVG)
           <span class="annotation">width : 600px / height : 700px</span></label
@@ -125,7 +169,7 @@
 
       <div class="control-group">
         <label for="text-input"
-          >2. Enter your text
+          >2. Enter your text (bottom banner)
           <span class="annotation">max ≈100 characters</span></label
         >
         <input
@@ -136,7 +180,7 @@
       </div>
 
       <div class="control-group">
-        <label for="color-picker">3. Pick a banner color</label>
+        <label for="color-picker">3. Pick a bottom banner color</label>
         <select id="color-picker">
           <option value="#101D40">Midnight</option>
           <option value="#E0F2FF">Light blue</option>
@@ -178,12 +222,28 @@
       const ctx = canvas.getContext("2d");
       const downloadLink = document.getElementById("download-link");
       let lang;
-      // MODIFIED: Define which colors should use the black logo for better contrast.
+
+      const addTopBannerCheckbox = document.getElementById(
+        "add-top-banner-checkbox"
+      );
+      const topBannerControls = document.getElementById("top-banner-controls");
+      const titleInput = document.getElementById("title-input");
+      const subtitleInput = document.getElementById("subtitle-input");
+      const highlightColorPicker = document.getElementById(
+        "highlight-color-picker"
+      );
+
+      addTopBannerCheckbox.addEventListener("change", () => {
+        topBannerControls.style.display = addTopBannerCheckbox.checked
+          ? "block"
+          : "none";
+      });
+
       const colorsForBlackLogo = new Set([
         "#E0F2FF",
         "#FFDDBD",
         "#FFD15C",
-        "#F2FFE5", // Corrected from F2FF25 to match HTML
+        "#F2FFE5",
         "#D7EDFE",
         "#FCEEFB",
       ]);
@@ -194,39 +254,60 @@
         lang = langPicker.value;
         const color = colorPicker.value;
 
+        const addTopBanner = addTopBannerCheckbox.checked;
+        const titleText = titleInput.value;
+        const subtitleText = subtitleInput.value;
+        const highlightColor = highlightColorPicker.value;
+
         if (!file) {
           alert("Please upload an image first.");
           return;
         }
         if (!text.trim()) {
-          alert("Please enter some text for the banner.");
+          alert("Please enter some text for the bottom banner.");
           return;
         }
 
-        // --- MODIFICATION 1: Get original filename and create the new one ---
         const originalFilename = file.name;
         const nameWithoutExtension =
           originalFilename.substring(0, originalFilename.lastIndexOf(".")) ||
           originalFilename;
         const newFilename = `${nameWithoutExtension}_SM.png`;
-        // -----------------------------------------------------------------
 
         const reader = new FileReader();
         reader.onload = (e) => {
           const userImage = new Image();
           userImage.onload = () => {
-            document.fonts
-              .load("bold 14px 'Noto Sans Display'")
+            document.fonts.ready
               .then(() => {
-                // --- MODIFICATION 2: Pass the new filename to the createImage function ---
-                createImage(userImage, text, color, newFilename);
+                createImage(
+                  userImage,
+                  text,
+                  color,
+                  newFilename,
+                  false,
+                  addTopBanner,
+                  titleText,
+                  subtitleText,
+                  highlightColor
+                );
               })
               .catch((err) => {
                 console.error("Font could not be loaded: ", err);
                 alert(
                   "Could not load the custom font. Using Arial as a fallback."
                 );
-                createImage(userImage, text, color, newFilename, true);
+                createImage(
+                  userImage,
+                  text,
+                  color,
+                  newFilename,
+                  true,
+                  addTopBanner,
+                  titleText,
+                  subtitleText,
+                  highlightColor
+                );
               });
           };
           userImage.src = e.target.result;
@@ -234,94 +315,198 @@
         reader.readAsDataURL(file);
       });
 
-      // --- MODIFICATION 3: Add newFilename parameter to the function ---
+      // --- UNCHANGED ---: This function is correct.
+      function drawStyledText(
+        ctx,
+        text,
+        x,
+        y,
+        fontSize,
+        fontFamily,
+        defaultColor,
+        highlightColor
+      ) {
+        const parts = text.split("*");
+        let currentX = x;
+        ctx.save();
+        ctx.textBaseline = "top";
+        ctx.font = `bold ${fontSize}px "${fontFamily}"`;
+
+        parts.forEach((part, index) => {
+          const isHighlighted = index % 2 === 1;
+          ctx.fillStyle = isHighlighted ? highlightColor : defaultColor;
+          ctx.fillText(part, currentX, y);
+          currentX += ctx.measureText(part).width;
+        });
+        ctx.restore();
+      }
+
       function createImage(
         userImage,
         text,
         color,
         newFilename,
-        useFallbackFont = false
+        useFallbackFont = false,
+        addTopBanner = false,
+        titleText = "",
+        subtitleText = "",
+        highlightColor = "#0073b0"
       ) {
-        var bannerHeight;
-        var logoPadding;
-        var textPadding;
+        const resolutionMultiplier = 3;
+
+        let bottomBannerHeight;
+        let logoPadding;
+        let textPadding;
 
         if (userImage.width > 1000) {
-          console.log(">1000");
-          bannerHeight = 100;
-          logoPadding = 75;
-          textPadding = 75;
+          bottomBannerHeight = 100 * resolutionMultiplier;
+          logoPadding = 75 * resolutionMultiplier;
+          textPadding = 75 * resolutionMultiplier;
         } else {
-          console.log("<1000");
-          bannerHeight = 50;
-          logoPadding = 37.5;
-          textPadding = 37.5;
+          bottomBannerHeight = 50 * resolutionMultiplier;
+          logoPadding = 37.5 * resolutionMultiplier;
+          textPadding = 37.5 * resolutionMultiplier;
         }
 
-        canvas.width = userImage.width;
-        canvas.height = userImage.height + bannerHeight;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let topBannerHeight = 0;
+        let titleSize;
+        let subtitleSize;
+        let topBannerPadding;
 
-        ctx.drawImage(userImage, 0, 0);
+        if (userImage.width > 1000) {
+          titleSize = 64 * resolutionMultiplier;
+          subtitleSize = 42 * resolutionMultiplier;
+          topBannerPadding = logoPadding;
+        } else {
+          titleSize = 32 * resolutionMultiplier;
+          subtitleSize = 21 * resolutionMultiplier;
+          topBannerPadding = logoPadding / 2;
+        }
+
+        if (addTopBanner && (titleText || subtitleText)) {
+          let neededHeight = topBannerPadding / 2;
+          if (titleText) neededHeight += titleSize;
+          if (subtitleText)
+            neededHeight += subtitleSize + 5 * resolutionMultiplier;
+          neededHeight += topBannerPadding;
+          topBannerHeight = neededHeight;
+        }
+
+        canvas.width = userImage.width * resolutionMultiplier;
+        canvas.height =
+          topBannerHeight +
+          userImage.height * resolutionMultiplier +
+          bottomBannerHeight;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#FFFFFF";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // --- MODIFIED ---: We will now hardcode the font name directly into the drawing commands.
+        // This eliminates any variable-related errors.
+        if (addTopBanner && topBannerHeight > 0) {
+          const leftPadding = logoPadding;
+          let currentY = topBannerPadding;
+
+          if (titleText) {
+            // This now calls a simplified drawStyledText function.
+            drawStyledText(
+              ctx,
+              titleText,
+              leftPadding,
+              currentY,
+              titleSize,
+              "Noto Sans Display SemiCondensed", // Pass the name directly
+              "#000000",
+              highlightColor
+            );
+            currentY += titleSize + 5 * resolutionMultiplier;
+          }
+
+          if (subtitleText) {
+            // --- MODIFIED ---: The font name is now hardcoded with double quotes for maximum compatibility.
+            ctx.font = useFallbackFont
+              ? `500 ${subtitleSize}px Arial`
+              : `500 ${subtitleSize}px "Noto Sans Display SemiCondensed"`;
+            ctx.fillStyle = "#000000";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "top";
+            ctx.fillText(subtitleText, leftPadding, currentY);
+          }
+        }
+
+        const imageY = topBannerHeight;
+        ctx.drawImage(
+          userImage,
+          0,
+          imageY,
+          userImage.width * resolutionMultiplier,
+          userImage.height * resolutionMultiplier
+        );
+
+        const bottomBannerY =
+          topBannerHeight + userImage.height * resolutionMultiplier;
         ctx.fillStyle = color;
-        ctx.fillRect(0, userImage.height, canvas.width, bannerHeight);
+        ctx.fillRect(0, bottomBannerY, canvas.width, bottomBannerHeight);
 
         const oecdLogo = new Image();
         oecdLogo.onload = () => {
           var logoMaxHeight;
-
           if (userImage.width > 1000) {
-            logoMaxHeight = 50;
+            logoMaxHeight = 50 * resolutionMultiplier;
           } else {
-            logoMaxHeight = 30;
+            logoMaxHeight = 30 * resolutionMultiplier;
           }
 
           const logoAspectRatio = oecdLogo.width / oecdLogo.height;
           const logoHeight = logoMaxHeight;
           const logoWidth = logoHeight * logoAspectRatio;
-          const logoY = userImage.height + (bannerHeight - logoHeight) / 2;
+          const logoY = bottomBannerY + (bottomBannerHeight - logoHeight) / 2;
           const logoX = logoPadding;
           ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
+
           var textColor;
+          var fontSize;
           if (userImage.width > 1000) {
             textColor = colorsForBlackLogo.has(color) ? "#000000" : "#FFFFFF";
-            ctx.fillStyle = textColor;
-            ctx.font = useFallbackFont
-              ? "30px Arial"
-              : "bold 30px 'Noto Sans Display'";
-            ctx.textAlign = "right";
+            fontSize = 30 * resolutionMultiplier;
           } else {
             textColor = colorsForBlackLogo.has(color) ? "#000000" : "#FFFFFF";
-            ctx.fillStyle = textColor;
-            ctx.font = useFallbackFont
-              ? "15px Arial"
-              : "bold 15px 'Noto Sans Display'";
-            ctx.textAlign = "right";
+            fontSize = 15 * resolutionMultiplier;
           }
+
+          ctx.fillStyle = textColor;
+
+          if (userImage.width > 1000) {
+            ctx.font = useFallbackFont
+              ? `${fontSize}px Arial`
+              : `bold ${fontSize}px "Noto Sans Display"`;
+          } else {
+            ctx.font = useFallbackFont
+              ? `${fontSize}px Arial`
+              : `400 ${fontSize}px "Noto Sans Display"`;
+          }
+
+          ctx.textAlign = "right";
 
           const textMetrics = ctx.measureText(text);
           const logoRightX = logoX + logoWidth;
           const textLeftX = canvas.width - textPadding - textMetrics.width;
 
-          if (textLeftX < logoRightX + 40) {
+          if (textLeftX < logoRightX + 40 * resolutionMultiplier) {
             ctx.textBaseline = "top";
-            var lineHeight;
-
-            if (userImage.width > 1000) {
-              lineHeight = 35;
-            } else {
-              lineHeight = 18;
-            }
+            var lineHeight =
+              userImage.width > 1000
+                ? 35 * resolutionMultiplier
+                : 18 * resolutionMultiplier;
             const blockHeight = lineHeight * 2;
-            const topPaddingForBlock = (bannerHeight - blockHeight) / 2;
-            const textY1 = userImage.height + topPaddingForBlock;
+            const topPaddingForBlock = (bottomBannerHeight - blockHeight) / 2;
+            const textY1 = bottomBannerY + topPaddingForBlock;
 
-            let line1 = "";
-            let line2 = "";
-
+            let line1 = "",
+              line2 = "";
             const middle = Math.floor(text.length / 2);
             const splitPoint = text.lastIndexOf(" ", middle);
-
             if (splitPoint !== -1) {
               line1 = text.substring(0, splitPoint);
               line2 = text.substring(splitPoint + 1);
@@ -339,13 +524,11 @@
             }
           } else {
             ctx.textBaseline = "middle";
-            const textY = userImage.height + bannerHeight / 2;
+            const textY = bottomBannerY + bottomBannerHeight / 2;
             ctx.fillText(text, canvas.width - textPadding, textY);
           }
 
-          // --- MODIFICATION 4: Set the download attribute with the new filename ---
           downloadLink.download = newFilename;
-          // ----------------------------------------------------------------------
           downloadLink.href = canvas.toDataURL("image/png");
           downloadLink.style.display = "inline-block";
         };
@@ -362,7 +545,6 @@
             ? "logo/OCDE_logo_fr.svg"
             : "logo/OECD logo FR White no tagline.svg";
         } else {
-          // Default to English
           logoSrc = colorsForBlackLogo.has(color)
             ? "logo/OECD_20cm_blue_notag.svg"
             : "logo/OECD logo EN White no tagline.svg";

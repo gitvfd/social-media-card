@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@300;400;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@400;700&family=Noto+Sans+Display+SemiCondensed:wght@500;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -142,11 +142,7 @@
         <div class="control-group">
           <label for="highlight-color-picker">Color for highlighted text</label>
           <select id="highlight-color-picker">
-            <option value="#0073b0">OECD Blue</option>
-            <option value="#d9534f">Red</option>
-            <option value="#5cb85c">Green</option>
-            <option value="#f0ad4e">Orange</option>
-            <option value="#333333">Black</option>
+            <option value="#156df9">Highlight Blue</option>
           </select>
         </div>
         <div class="control-group">
@@ -282,8 +278,15 @@
         reader.onload = (e) => {
           const userImage = new Image();
           userImage.onload = () => {
-            document.fonts
-              .load("bold 14px 'Noto Sans Display'")
+            // --- MODIFIED ---: Load all required font families and weights before drawing.
+            Promise.all([
+              document.fonts.load("400 12px 'Noto Sans Display'"), // Regular weight for small bottom banner
+              document.fonts.load("bold 12px 'Noto Sans Display'"), // Bold for large bottom banner
+              document.fonts.load("500 12px 'Noto Sans Display SemiCondensed'"), // Medium for subtitle
+              document.fonts.load(
+                "bold 12px 'Noto Sans Display SemiCondensed'"
+              ), // Bold for title
+            ])
               .then(() => {
                 createImage(
                   userImage,
@@ -357,7 +360,6 @@
       ) {
         const resolutionMultiplier = 3;
 
-        // --- BOTTOM BANNER SIZING ---
         var bottomBannerHeight;
         var logoPadding;
         var textPadding;
@@ -372,14 +374,23 @@
           textPadding = 37.5 * resolutionMultiplier;
         }
 
-        // --- MODIFIED ---: Logic to calculate top banner height is restored.
         let topBannerHeight = 0;
-        const titleSize = 32 * resolutionMultiplier;
-        const subtitleSize = 21 * resolutionMultiplier;
-        const topBannerPadding = logoPadding / 2; // Use same padding for consistency
+        var titleSize;
+        var subtitleSize;
+        var topBannerPadding;
+
+        if (userImage.width > 1000) {
+          titleSize = 64 * resolutionMultiplier;
+          subtitleSize = 42 * resolutionMultiplier;
+          topBannerPadding = logoPadding;
+        } else {
+          titleSize = 32 * resolutionMultiplier;
+          subtitleSize = 21 * resolutionMultiplier;
+          topBannerPadding = logoPadding / 2;
+        }
 
         if (addTopBanner && (titleText || subtitleText)) {
-          let neededHeight = topBannerPadding;
+          let neededHeight = topBannerPadding / 2;
           if (titleText) neededHeight += titleSize;
           if (subtitleText)
             neededHeight += subtitleSize + 5 * resolutionMultiplier;
@@ -387,22 +398,20 @@
           topBannerHeight = neededHeight;
         }
 
-        // --- SET CANVAS DIMENSIONS ---
-        // --- MODIFIED ---: Canvas height now includes the top banner again.
         canvas.width = userImage.width * resolutionMultiplier;
         canvas.height =
           topBannerHeight +
           userImage.height * resolutionMultiplier +
           bottomBannerHeight;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        // --- MODIFIED ---: White background is restored.
         ctx.fillStyle = "#FFFFFF";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // --- DRAW TITLE AND SUBTITLE (IF ENABLED) ---
-        // --- MODIFIED ---: This now draws into the dedicated top banner space.
         if (addTopBanner && topBannerHeight > 0) {
-          const font = useFallbackFont ? "Arial" : "'Noto Sans Display'";
+          // --- MODIFIED ---: Define the new font family for the top banner.
+          const topBannerFont = useFallbackFont
+            ? "Arial"
+            : "'Noto Sans Display SemiCondensed'";
           const leftPadding = logoPadding;
           let currentY = topBannerPadding;
 
@@ -410,10 +419,10 @@
             drawStyledText(
               ctx,
               titleText,
-              leftPadding, // Left-aligned
+              leftPadding,
               currentY,
               titleSize,
-              font,
+              topBannerFont, // Use the new font
               "#000000",
               highlightColor
             );
@@ -421,16 +430,15 @@
           }
 
           if (subtitleText) {
-            ctx.font = `normal ${subtitleSize}px ${font}`;
-            ctx.fillStyle = "#555555";
+            // --- MODIFIED ---: Use the new font family and set the weight to 500 (Medium).
+            ctx.font = `500 ${subtitleSize}px ${topBannerFont}`;
+            ctx.fillStyle = "#000000";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
             ctx.fillText(subtitleText, leftPadding, currentY);
           }
         }
 
-        // --- DRAW USER IMAGE ---
-        // --- MODIFIED ---: Image is now shifted down by the height of the top banner.
         const imageY = topBannerHeight;
         ctx.drawImage(
           userImage,
@@ -440,8 +448,6 @@
           userImage.height * resolutionMultiplier
         );
 
-        // --- DRAW BOTTOM BANNER ---
-        // --- MODIFIED ---: Y-position accounts for both top banner and image height.
         const bottomBannerY =
           topBannerHeight + userImage.height * resolutionMultiplier;
         ctx.fillStyle = color;
@@ -474,9 +480,18 @@
           }
 
           ctx.fillStyle = textColor;
-          ctx.font = useFallbackFont
-            ? `${fontSize}px Arial`
-            : `bold ${fontSize}px 'Noto Sans Display'`;
+
+          if (userImage.width > 1000) {
+            ctx.font = useFallbackFont
+              ? `${fontSize}px Arial`
+              : `bold ${fontSize}px 'Noto Sans Display'`;
+          } else {
+            // This now correctly uses the 'regular' (400) weight which we pre-loaded.
+            ctx.font = useFallbackFont
+              ? `${fontSize}px Arial`
+              : `400 ${fontSize}px 'Noto Sans Display'`;
+          }
+
           ctx.textAlign = "right";
 
           const textMetrics = ctx.measureText(text);

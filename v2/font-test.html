@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Font Rendering Test</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display+SemiCondensed:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      canvas {
+        border: 1px solid black;
+      }
+      #test-div {
+        font-family: "Noto Sans Display SemiCondensed", sans-serif;
+        font-weight: 700;
+        font-size: 32px;
+        margin-bottom: 20px;
+        border: 1px dashed #ccc;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Font Rendering Test</h1>
+    <p>
+      This page will determine if 'Noto Sans Display SemiCondensed' can be
+      rendered correctly in your browser.
+    </p>
+
+    <hr />
+
+    <h2>Test 1: HTML Rendering</h2>
+    <div id="test-div">
+      This text should be Noto Sans Display SemiCondensed Bold.
+    </div>
+    <p>
+      <strong>Question:</strong> Does the text in the dashed box above look
+      correct?
+    </p>
+
+    <hr />
+
+    <h2>Test 2: Canvas Rendering</h2>
+    <canvas id="font-canvas" width="600" height="150"></canvas>
+    <p>
+      <strong>Question:</strong> Does the text inside the black box below look
+      correct?
+    </p>
+
+    <script>
+      // Wait for all fonts linked in the document to be fully ready.
+      document.fonts.ready
+        .then(() => {
+          console.log("Fonts are ready. Attempting to draw on canvas.");
+          const canvas = document.getElementById("font-canvas");
+          const ctx = canvas.getContext("2d");
+
+          // Clear canvas
+          ctx.fillStyle = "#f0f0f0";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Draw Title (Bold)
+          ctx.fillStyle = "black";
+          ctx.font = "bold 32px 'Noto Sans Display SemiCondensed'";
+          ctx.fillText("Title: Noto SemiCondensed Bold", 20, 50);
+
+          // Draw Subtitle (Medium)
+          ctx.font = "500 21px 'Noto Sans Display SemiCondensed'";
+          ctx.fillText("Subtitle: Noto SemiCondensed Medium", 20, 100);
+
+          console.log("Canvas drawing complete.");
+        })
+        .catch((err) => {
+          console.error("Error loading fonts:", err);
+          alert(
+            "There was an error loading the fonts. Check the developer console for details."
+          );
+        });
+    </script>
+  </body>
+</html>
