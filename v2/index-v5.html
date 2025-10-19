@@ -115,7 +115,7 @@
   </head>
   <body>
     <div id="app-container">
-      <h1>OECD social media chart banner Generator-test 23:11</h1>
+      <h1>OECD social media chart banner Generator-test 23:15</h1>
 
       <div class="control-group">
         <input type="checkbox" id="add-top-banner-checkbox" />
@@ -416,7 +416,7 @@
               leftPadding,
               currentY,
               titleSize,
-              "Noto Sans Display SemiCondensed", // Pass the name directly
+              "Noto Sans Display", // Pass the name directly
               "#101D40",
               highlightColor
             );
@@ -427,7 +427,7 @@
             // --- MODIFIED ---: The font name is now hardcoded with double quotes for maximum compatibility.
             ctx.font = useFallbackFont
               ? `300 ${subtitleSize}px Arial`
-              : `300 ${subtitleSize}px "Noto Sans Display SemiCondensed"`;
+              : `300 ${subtitleSize}px "Noto Sans Display"`;
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
