@@ -115,7 +115,7 @@
   </head>
   <body>
     <div id="app-container">
-      <h1>OECD social media chart banner Generator-test 23:15</h1>
+      <h1>OECD social media chart banner Generator-test 23:20</h1>
 
       <div class="control-group">
         <input type="checkbox" id="add-top-banner-checkbox" />
@@ -330,7 +330,7 @@
         let currentX = x;
         ctx.save();
         ctx.textBaseline = "top";
-        ctx.font = `300 ${fontSize}px "${fontFamily}"`;
+        ctx.font = `600 ${fontSize}px "${fontFamily}"`;
 
         parts.forEach((part, index) => {
           const isHighlighted = index % 2 === 1;
@@ -374,12 +374,12 @@
         let topBannerPadding;
 
         if (userImage.width > 1000) {
-          titleSize = 64 * resolutionMultiplier;
-          subtitleSize = 42 * resolutionMultiplier;
+          titleSize = 60 * resolutionMultiplier;
+          subtitleSize = 40 * resolutionMultiplier;
           topBannerPadding = logoPadding;
         } else {
-          titleSize = 32 * resolutionMultiplier;
-          subtitleSize = 21 * resolutionMultiplier;
+          titleSize = 30 * resolutionMultiplier;
+          subtitleSize = 20 * resolutionMultiplier;
           topBannerPadding = logoPadding / 2;
         }
 
@@ -426,8 +426,8 @@
           if (subtitleText) {
             // --- MODIFIED ---: The font name is now hardcoded with double quotes for maximum compatibility.
             ctx.font = useFallbackFont
-              ? `300 ${subtitleSize}px Arial`
-              : `300 ${subtitleSize}px "Noto Sans Display"`;
+              ? `600 ${subtitleSize}px Arial`
+              : `600 ${subtitleSize}px "Noto Sans Display"`;
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
