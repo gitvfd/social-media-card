@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@300;400;500;700&family=Noto+Sans+Display+SemiCondensed:wght@300;400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wght@300;400;500;600;700&family=Noto+Sans+Display+SemiCondensed:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -115,7 +115,7 @@
   </head>
   <body>
     <div id="app-container">
-      <h1>OECD social media chart banner Generator</h1>
+      <h1>OECD social media chart banner Generator-test 23:11</h1>
 
       <div class="control-group">
         <input type="checkbox" id="add-top-banner-checkbox" />
@@ -330,7 +330,7 @@
         let currentX = x;
         ctx.save();
         ctx.textBaseline = "top";
-        ctx.font = `400 ${fontSize}px "${fontFamily}"`;
+        ctx.font = `300 ${fontSize}px "${fontFamily}"`;
 
         parts.forEach((part, index) => {
           const isHighlighted = index % 2 === 1;
@@ -426,8 +426,8 @@
           if (subtitleText) {
             // --- MODIFIED ---: The font name is now hardcoded with double quotes for maximum compatibility.
             ctx.font = useFallbackFont
-              ? `400 ${subtitleSize}px Arial`
-              : `400 ${subtitleSize}px "Noto Sans Display SemiCondensed"`;
+              ? `300 ${subtitleSize}px Arial`
+              : `300 ${subtitleSize}px "Noto Sans Display SemiCondensed"`;
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
@@ -455,7 +455,7 @@
           if (userImage.width > 1000) {
             logoMaxHeight = 50 * resolutionMultiplier;
           } else {
-            logoMaxHeight = 30 * resolutionMultiplier;
+            logoMaxHeight = 25 * resolutionMultiplier;
           }
 
           const logoAspectRatio = oecdLogo.width / oecdLogo.height;
@@ -480,11 +480,11 @@
           if (userImage.width > 1000) {
             ctx.font = useFallbackFont
               ? `${fontSize}px Arial`
-              : `400 ${fontSize}px "Noto Sans Display SemiCondensed"`;
+              : `300 ${fontSize}px "Noto Sans Display"`;
           } else {
             ctx.font = useFallbackFont
               ? `${fontSize}px Arial`
-              : `400 ${fontSize}px "Noto Sans Display SemiCondensed"`;
+              : `300 ${fontSize}px "Noto Sans Display"`;
           }
 
           ctx.textAlign = "right";
