@@ -115,7 +115,7 @@
   </head>
   <body>
     <div id="app-container">
-      <h1>OECD social media chart banner Generator-test 23:20</h1>
+      <h1>OECD social media chart banner Generator-test 23:25</h1>
 
       <div class="control-group">
         <input type="checkbox" id="add-top-banner-checkbox" />
@@ -330,7 +330,7 @@
         let currentX = x;
         ctx.save();
         ctx.textBaseline = "top";
-        ctx.font = `600 ${fontSize}px "${fontFamily}"`;
+        ctx.font = `300 ${fontSize}px "${fontFamily}"`;
 
         parts.forEach((part, index) => {
           const isHighlighted = index % 2 === 1;
@@ -416,7 +416,7 @@
               leftPadding,
               currentY,
               titleSize,
-              "Noto Sans Display", // Pass the name directly
+              "Noto Sans Display SemiCondensed", // Pass the name directly
               "#101D40",
               highlightColor
             );
@@ -426,8 +426,8 @@
           if (subtitleText) {
             // --- MODIFIED ---: The font name is now hardcoded with double quotes for maximum compatibility.
             ctx.font = useFallbackFont
-              ? `600 ${subtitleSize}px Arial`
-              : `600 ${subtitleSize}px "Noto Sans Display"`;
+              ? `300 ${subtitleSize}px Arial`
+              : `300 ${subtitleSize}px "Noto Sans Display SemiCondensed"`;
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
