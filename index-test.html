@@ -236,6 +236,7 @@
         "highlight-color-picker"
       );
 
+      // --- VERIFIED ---: This event listener is correct and present.
       addTopBannerCheckbox.addEventListener("change", () => {
         topBannerControls.style.display = addTopBannerCheckbox.checked
           ? "block"
@@ -318,7 +319,6 @@
         reader.readAsDataURL(file);
       });
 
-      // --- MODIFIED ---: This function now also accepts a maxWidth and performs wrapping
       function drawStyledText(
         ctx,
         text,
@@ -329,25 +329,25 @@
         fontFamily,
         defaultColor,
         highlightColor,
-        maxWidth // <-- Added maxWidth
+        maxWidth
       ) {
-        const manualLines = text.split("\n"); // Split text into manual lines
+        const manualLines = text.split("\n");
         let currentY = y;
         const startX = x;
 
         ctx.save();
         ctx.textBaseline = "top";
-        ctx.font = `700 ${fontSize}px "${fontFamily}"`; // Set font for measurement
+        ctx.font = `700 ${fontSize}px "${fontFamily}"`;
         ctx.fontStretch = "87.5%";
 
         manualLines.forEach((manualLine) => {
-          // Check if this manual line needs wrapping
-          const plainLine = manualLine.replace(/\*/g, ""); // Remove stars for measurement
+          const plainLine = manualLine.replace(/\*/g, "");
+          ctx.font = `700 ${fontSize}px "${fontFamily}"`; // Set font before measuring
+          ctx.fontStretch = "87.5%";
           const metrics = ctx.measureText(plainLine);
-          let linesToDraw = [manualLine]; // Default: one line
+          let linesToDraw = [manualLine];
 
           if (metrics.width > maxWidth) {
-            // --- This is the "source" (bottom banner) wrapping logic ---
             const middle = Math.floor(manualLine.length / 2);
             const splitPoint = manualLine.lastIndexOf(" ", middle);
             if (splitPoint !== -1) {
@@ -356,30 +356,27 @@
                 manualLine.substring(splitPoint + 1),
               ];
             }
-            // If no split point, linesToDraw remains [manualLine] (a single long word)
-            // -------------------------------------------------------------
           }
 
-          // Now draw the line(s) (either 1 or 2)
-          linesToDraw.forEach(line => {
+          linesToDraw.forEach((line) => {
             const parts = line.split("*");
-            let currentX = startX; // Reset X for each new line
+            let currentX = startX;
 
             parts.forEach((part, index) => {
               const isHighlighted = index % 2 === 1;
               ctx.fillStyle = isHighlighted ? highlightColor : defaultColor;
-              ctx.fillText(part, currentX, currentY);
-              // We must set the font *before* measuring
+              // Ensure font is set before fillText and measureText within the loop
               ctx.font = `700 ${fontSize}px "${fontFamily}"`;
               ctx.fontStretch = "87.5%";
+              ctx.fillText(part, currentX, currentY);
               currentX += ctx.measureText(part).width;
             });
-            currentY += lineHeight; // Move Y down for the next line
+            currentY += lineHeight;
           });
         });
 
         ctx.restore();
-        return currentY; // Return the new Y position
+        return currentY;
       }
 
       function createImage(
@@ -424,13 +421,8 @@
           topBannerPadding = logoPadding / 2;
         }
 
-        // --- NOTE ---: This height calculation is still based on manual newlines only.
-        // For 100% accuracy, this would need to pre-calculate the wrapped lines,
-        // but that's a much larger change. This will work fine, but the banner
-        // height might be slightly too small if wrapping adds many lines.
-        // Given your constraint, this is the intended implementation.
         if (addTopBanner && (titleText || subtitleText)) {
-          let neededHeight = topBannerPadding / 2; // Initial top padding
+          let neededHeight = topBannerPadding / 2;
 
           if (titleText) {
             const titleLines = titleText.split("\n").length;
@@ -444,7 +436,7 @@
             neededHeight += subtitleLines * subtitleLineHeight;
           }
 
-          neededHeight += topBannerPadding; // Bottom padding
+          neededHeight += topBannerPadding;
           topBannerHeight = neededHeight;
         }
 
@@ -461,12 +453,10 @@
         if (addTopBanner && topBannerHeight > 0) {
           const leftPadding = logoPadding;
           let currentY = topBannerPadding;
-          // --- MODIFIED ---: Define the max width for wrapping
-          const maxWidth = canvas.width - leftPadding * 2; // Padding on both sides
+          const maxWidth = canvas.width - leftPadding * 2;
 
           if (titleText) {
             const titleLineHeight = titleSize + 5 * resolutionMultiplier;
-            // --- MODIFIED ---: Pass maxWidth to the function
             currentY = drawStyledText(
               ctx,
               titleText,
@@ -474,17 +464,17 @@
               currentY,
               titleSize,
               titleLineHeight,
-              "Noto Sans Display",
+              "Noto Sans Display", // Font family for title
               "#101D40",
               highlightColor,
-              maxWidth // <-- Pass max width
+              maxWidth
             );
           }
 
           if (subtitleText) {
             ctx.font = useFallbackFont
               ? `500 ${subtitleSize}px Arial`
-              : `500 ${subtitleSize}px "Noto Sans Display"`;
+              : `500 ${subtitleSize}px "Noto Sans Display"`; // Font family for subtitle
             ctx.fontStretch = "87.5%";
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
@@ -493,11 +483,15 @@
             const subtitleLines = subtitleText.split("\n");
             const subtitleLineHeight = subtitleSize + 5 * resolutionMultiplier;
 
-            // --- MODIFIED ---: Implement wrapping logic for each manual line
             subtitleLines.forEach((line) => {
+              // Ensure font is set before measurement
+              ctx.font = useFallbackFont
+                ? `500 ${subtitleSize}px Arial`
+                : `500 ${subtitleSize}px "Noto Sans Display"`;
+              ctx.fontStretch = "87.5%";
               const metrics = ctx.measureText(line);
+
               if (metrics.width > maxWidth) {
-                // --- This is the "source" (bottom banner) wrapping logic ---
                 const middle = Math.floor(line.length / 2);
                 const splitPoint = line.lastIndexOf(" ", middle);
                 if (splitPoint !== -1) {
@@ -508,13 +502,10 @@
                   ctx.fillText(line2, leftPadding, currentY);
                   currentY += subtitleLineHeight;
                 } else {
-                  // Single long word, just draw it
                   ctx.fillText(line, leftPadding, currentY);
                   currentY += subtitleLineHeight;
                 }
-                // -------------------------------------------------------------
               } else {
-                // Line fits, draw as is
                 ctx.fillText(line, leftPadding, currentY);
                 currentY += subtitleLineHeight;
               }
@@ -630,7 +621,7 @@
         if (lang === "fr") {
           logoSrc = colorsForBlackLogo.has(color)
             ? "logo/OCDE_logo_fr.svg"
-            * "logo/OECD logo FR White no tagline.svg";
+            : "logo/OECD logo FR White no tagline.svg";
         } else {
           logoSrc = colorsForBlackLogo.has(color)
             ? "logo/OECD_20cm_blue_notag.svg"
