@@ -236,7 +236,6 @@
         "highlight-color-picker"
       );
 
-      // --- VERIFIED ---: This event listener is correct and present.
       addTopBannerCheckbox.addEventListener("change", () => {
         topBannerControls.style.display = addTopBannerCheckbox.checked
           ? "block"
@@ -319,6 +318,40 @@
         reader.readAsDataURL(file);
       });
 
+      // --- NEW --- Helper function to calculate lines needed, including wrapping
+      function calculateWrappedLines(ctx, text, fontStyle, maxWidth) {
+        let lineCount = 0;
+        const manualLines = text.split("\n");
+
+        ctx.save();
+        ctx.font = fontStyle; // Set the font for measurement
+        ctx.fontStretch = "87.5%";
+
+        manualLines.forEach((line) => {
+          // Remove stars for width calculation if needed (only for title)
+          const plainLine = fontStyle.includes("700")
+            ? line.replace(/\*/g, "")
+            : line;
+          const metrics = ctx.measureText(plainLine);
+
+          if (metrics.width > maxWidth) {
+            // Check if it's splittable
+            const middle = Math.floor(line.length / 2);
+            const splitPoint = line.lastIndexOf(" ", middle);
+            if (splitPoint !== -1) {
+              lineCount += 2; // Wraps into two lines
+            } else {
+              lineCount += 1; // Single long word, counts as one line
+            }
+          } else {
+            lineCount += 1; // Fits on one line
+          }
+        });
+
+        ctx.restore();
+        return lineCount;
+      }
+
       function drawStyledText(
         ctx,
         text,
@@ -342,7 +375,7 @@
 
         manualLines.forEach((manualLine) => {
           const plainLine = manualLine.replace(/\*/g, "");
-          ctx.font = `700 ${fontSize}px "${fontFamily}"`; // Set font before measuring
+          ctx.font = `700 ${fontSize}px "${fontFamily}"`;
           ctx.fontStretch = "87.5%";
           const metrics = ctx.measureText(plainLine);
           let linesToDraw = [manualLine];
@@ -365,7 +398,6 @@
             parts.forEach((part, index) => {
               const isHighlighted = index % 2 === 1;
               ctx.fillStyle = isHighlighted ? highlightColor : defaultColor;
-              // Ensure font is set before fillText and measureText within the loop
               ctx.font = `700 ${fontSize}px "${fontFamily}"`;
               ctx.fontStretch = "87.5%";
               ctx.fillText(part, currentX, currentY);
@@ -421,23 +453,45 @@
           topBannerPadding = logoPadding / 2;
         }
 
+        // --- MODIFIED ---: Pre-calculate lines and banner height
+        let titleLines = 0;
+        let subtitleLines = 0;
+        let titleLineHeight = 0;
+        let subtitleLineHeight = 0;
+        const tempCanvasWidth = userImage.width * resolutionMultiplier; // Use calculated width
+        const tempMaxWidth = tempCanvasWidth - logoPadding * 2; // Use calculated padding
+
         if (addTopBanner && (titleText || subtitleText)) {
-          let neededHeight = topBannerPadding / 2;
-
           if (titleText) {
-            const titleLines = titleText.split("\n").length;
-            const titleLineHeight = titleSize + 5 * resolutionMultiplier;
-            neededHeight += titleLines * titleLineHeight;
+            const titleFontStyle = useFallbackFont
+              ? `700 ${titleSize}px Arial`
+              : `700 ${titleSize}px "Noto Sans Display"`;
+            titleLines = calculateWrappedLines(
+              ctx,
+              titleText,
+              titleFontStyle,
+              tempMaxWidth
+            );
+            titleLineHeight = titleSize + 5 * resolutionMultiplier;
           }
-
           if (subtitleText) {
-            const subtitleLines = subtitleText.split("\n").length;
-            const subtitleLineHeight = subtitleSize + 5 * resolutionMultiplier;
-            neededHeight += subtitleLines * subtitleLineHeight;
+            const subtitleFontStyle = useFallbackFont
+              ? `500 ${subtitleSize}px Arial`
+              : `500 ${subtitleSize}px "Noto Sans Display"`;
+            subtitleLines = calculateWrappedLines(
+              ctx,
+              subtitleText,
+              subtitleFontStyle,
+              tempMaxWidth
+            );
+            subtitleLineHeight = subtitleSize + 5 * resolutionMultiplier;
           }
 
-          neededHeight += topBannerPadding;
-          topBannerHeight = neededHeight;
+          topBannerHeight =
+            topBannerPadding / 2 + // Top padding
+            titleLines * titleLineHeight +
+            subtitleLines * subtitleLineHeight +
+            topBannerPadding; // Bottom padding
         }
 
         canvas.width = userImage.width * resolutionMultiplier;
@@ -453,18 +507,18 @@
         if (addTopBanner && topBannerHeight > 0) {
           const leftPadding = logoPadding;
           let currentY = topBannerPadding;
-          const maxWidth = canvas.width - leftPadding * 2;
+          const maxWidth = canvas.width - leftPadding * 2; // Final maxWidth based on actual canvas
 
           if (titleText) {
-            const titleLineHeight = titleSize + 5 * resolutionMultiplier;
+            // Use pre-calculated titleLineHeight
             currentY = drawStyledText(
               ctx,
               titleText,
               leftPadding,
               currentY,
               titleSize,
-              titleLineHeight,
-              "Noto Sans Display", // Font family for title
+              titleLineHeight, // Use calculated line height
+              "Noto Sans Display",
               "#101D40",
               highlightColor,
               maxWidth
@@ -474,18 +528,17 @@
           if (subtitleText) {
             ctx.font = useFallbackFont
               ? `500 ${subtitleSize}px Arial`
-              : `500 ${subtitleSize}px "Noto Sans Display"`; // Font family for subtitle
+              : `500 ${subtitleSize}px "Noto Sans Display"`;
             ctx.fontStretch = "87.5%";
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
 
-            const subtitleLines = subtitleText.split("\n");
-            const subtitleLineHeight = subtitleSize + 5 * resolutionMultiplier;
+            const manualSubtitleLines = subtitleText.split("\n");
+            // Use pre-calculated subtitleLineHeight
 
-            subtitleLines.forEach((line) => {
-              // Ensure font is set before measurement
-              ctx.font = useFallbackFont
+            manualSubtitleLines.forEach((line) => {
+              ctx.font = useFallbackFont // Reset font before measuring
                 ? `500 ${subtitleSize}px Arial`
                 : `500 ${subtitleSize}px "Noto Sans Display"`;
               ctx.fontStretch = "87.5%";
