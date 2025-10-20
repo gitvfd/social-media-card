@@ -130,14 +130,23 @@
             >Title
             <span class="annotation"
               >Use *...* to mark text for color, e.g., Title with *colored*
-              text</span
+              text. Press Enter for new line.</span
             ></label
           >
-          <input
-            type="text"
+          <textarea
             id="title-input"
-            placeholder="e.g., Chart of the Week"
-          />
+            rows="3"
+            placeholder="e.g., Chart of the Week\nSecond Line"
+            style="
+              width: 100%;
+              padding: 0.75rem;
+              border: 1px solid #ccc;
+              border-radius: 6px;
+              box-sizing: border-box;
+              font-size: 1rem;
+              font-family: 'Noto Sans Display', sans-serif;
+            "
+          ></textarea>
         </div>
         <div class="control-group">
           <label for="highlight-color-picker">Color for highlighted text</label>
@@ -146,22 +155,31 @@
           </select>
         </div>
         <div class="control-group">
-          <label for="subtitle-input">Subtitle</label>
-          <input
-            type="text"
+          <label for="subtitle-input"
+            >Subtitle
+            <span class="annotation">Press Enter for new line.</span></label
+          >
+          <textarea
             id="subtitle-input"
-            placeholder="e.g., September 2025"
-          />
+            rows="2"
+            placeholder="e.g., September 2025\nSource: OECD Data"
+            style="
+              width: 100%;
+              padding: 0.75rem;
+              border: 1px solid #ccc;
+              border-radius: 6px;
+              box-sizing: border-box;
+              font-size: 1rem;
+              font-family: 'Noto Sans Display', sans-serif;
+            "
+          ></textarea>
         </div>
       </div>
 
       <div class="control-group">
         <label for="image-uploader"
           >1. Upload your image (PNG or SVG)
-          <span class="annotation">
-            with title: 525px (width) * 700px (height)/ without title: 600px *
-            700px
-          </span></label
+          <span class="annotation"> Recommended width: 600px </span></label
         >
         <input
           type="file"
@@ -230,8 +248,8 @@
         "add-top-banner-checkbox"
       );
       const topBannerControls = document.getElementById("top-banner-controls");
-      const titleInput = document.getElementById("title-input");
-      const subtitleInput = document.getElementById("subtitle-input");
+      const titleInput = document.getElementById("title-input"); // Now a textarea
+      const subtitleInput = document.getElementById("subtitle-input"); // Now a textarea
       const highlightColorPicker = document.getElementById(
         "highlight-color-picker"
       );
@@ -258,8 +276,8 @@
         const color = colorPicker.value;
 
         const addTopBanner = addTopBannerCheckbox.checked;
-        const titleText = titleInput.value;
-        const subtitleText = subtitleInput.value;
+        const titleText = titleInput.value; // Get value from textarea
+        const subtitleText = subtitleInput.value; // Get value from textarea
         const highlightColor = highlightColorPicker.value;
 
         if (!file) {
@@ -318,13 +336,13 @@
         reader.readAsDataURL(file);
       });
 
-      // --- NEW --- Helper function to calculate lines needed, including wrapping
+      // --- MODIFIED --- Helper function to calculate lines needed with multi-line wrapping
       function calculateWrappedLines(ctx, text, fontStyle, maxWidth) {
         let lineCount = 0;
         const manualLines = text.split("\n");
 
         ctx.save();
-        ctx.font = fontStyle; // Set the font for measurement
+        ctx.font = fontStyle;
         ctx.fontStretch = "87.5%";
 
         manualLines.forEach((line) => {
@@ -332,26 +350,61 @@
           const plainLine = fontStyle.includes("700")
             ? line.replace(/\*/g, "")
             : line;
-          const metrics = ctx.measureText(plainLine);
+          let remainingText = plainLine.trim();
 
-          if (metrics.width > maxWidth) {
-            // Check if it's splittable
-            const middle = Math.floor(line.length / 2);
-            const splitPoint = line.lastIndexOf(" ", middle);
-            if (splitPoint !== -1) {
-              lineCount += 2; // Wraps into two lines
-            } else {
-              lineCount += 1; // Single long word, counts as one line
+          if (!remainingText) {
+            // Handle empty manual lines
+            lineCount++;
+            return;
+          }
+
+          while (remainingText) {
+            lineCount++; // Start a new line
+            let currentLine = "";
+            let words = remainingText.split(" ");
+            let testLine = "";
+
+            // Find the longest possible line that fits
+            for (let i = 0; i < words.length; i++) {
+              testLine = currentLine ? currentLine + " " + words[i] : words[i];
+              if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+                // The currentLine fits, but adding the next word doesn't
+                break;
+              } else {
+                currentLine = testLine;
+              }
             }
-          } else {
-            lineCount += 1; // Fits on one line
+
+            // If even the first word doesn't fit, draw it on its own line
+            if (!currentLine && words.length > 0) {
+              currentLine = words[0];
+            }
+
+            // Remove the drawn portion from remainingText
+            if (currentLine.length === remainingText.length) {
+              remainingText = ""; // The whole rest fits
+            } else {
+              // Find the point where currentLine ends in remainingText
+              // Need to handle potential multiple occurrences, find the first one
+              let startIndex = remainingText.indexOf(currentLine);
+              if (startIndex === 0) {
+                // Should always start at 0
+                remainingText = remainingText
+                  .substring(currentLine.length)
+                  .trim();
+              } else {
+                // Fallback: This shouldn't happen with the logic above, but be safe
+                remainingText = remainingText.substring(words[0].length).trim();
+              }
+            }
           }
         });
 
         ctx.restore();
-        return lineCount;
+        return Math.max(1, lineCount); // Ensure at least 1 line is counted if text exists
       }
 
+      // --- MODIFIED ---: drawStyledText now handles multi-line wrapping
       function drawStyledText(
         ctx,
         text,
@@ -370,41 +423,78 @@
 
         ctx.save();
         ctx.textBaseline = "top";
-        ctx.font = `700 ${fontSize}px "${fontFamily}"`;
-        ctx.fontStretch = "87.5%";
 
         manualLines.forEach((manualLine) => {
-          const plainLine = manualLine.replace(/\*/g, "");
-          ctx.font = `700 ${fontSize}px "${fontFamily}"`;
-          ctx.fontStretch = "87.5%";
-          const metrics = ctx.measureText(plainLine);
-          let linesToDraw = [manualLine];
+          let remainingText = manualLine.trim();
+          let linePartsBuffer = []; // Buffer to hold parts for the current line
 
-          if (metrics.width > maxWidth) {
-            const middle = Math.floor(manualLine.length / 2);
-            const splitPoint = manualLine.lastIndexOf(" ", middle);
-            if (splitPoint !== -1) {
-              linesToDraw = [
-                manualLine.substring(0, splitPoint),
-                manualLine.substring(splitPoint + 1),
-              ];
+          while (remainingText) {
+            let currentLineText = ""; // The plain text of the line being built
+            let currentLineParts = []; // The styled parts for this line
+            let words = remainingText.split(/(\s+|\*)/).filter(Boolean); // Split by space or *, keeping delimiters
+            let fits = true;
+
+            // Build the current line word by word or part by part
+            for (let i = 0; i < words.length; i++) {
+              let part = words[i];
+              let testLineText = currentLineText
+                ? currentLineText + part
+                : part;
+              // Measure the plain text version
+              ctx.font = `700 ${fontSize}px "${fontFamily}"`;
+              ctx.fontStretch = "87.5%";
+              let testWidth = ctx.measureText(
+                testLineText.replace(/\*/g, "")
+              ).width;
+
+              if (testWidth > maxWidth && currentLineText.length > 0) {
+                // Current part makes the line too long, break here
+                fits = false;
+                remainingText = words.slice(i).join("").trim();
+                break;
+              } else {
+                currentLineText += part;
+                currentLineParts.push(part);
+                // If it's the last word and everything fits
+                if (i === words.length - 1) {
+                  remainingText = "";
+                }
+              }
             }
-          }
+            // Handle case where a single word/part is too long
+            if (currentLineParts.length === 0 && words.length > 0) {
+              currentLineParts.push(words[0]);
+              remainingText = words.slice(1).join("").trim();
+            }
 
-          linesToDraw.forEach((line) => {
-            const parts = line.split("*");
+            // Draw the constructed line
             let currentX = startX;
+            let isBoldSection = false;
+            currentLineParts.forEach((part) => {
+              if (part === "*") {
+                isBoldSection = !isBoldSection;
+                return; // Don't draw the asterisk itself
+              }
+              if (/\s+/.test(part)) {
+                // If it's whitespace
+                ctx.font = `700 ${fontSize}px "${fontFamily}"`;
+                ctx.fontStretch = "87.5%";
+                currentX += ctx.measureText(part).width; // Advance X for spaces
+                return;
+              }
 
-            parts.forEach((part, index) => {
-              const isHighlighted = index % 2 === 1;
-              ctx.fillStyle = isHighlighted ? highlightColor : defaultColor;
+              ctx.fillStyle = isBoldSection ? highlightColor : defaultColor;
               ctx.font = `700 ${fontSize}px "${fontFamily}"`;
               ctx.fontStretch = "87.5%";
               ctx.fillText(part, currentX, currentY);
               currentX += ctx.measureText(part).width;
             });
+            currentY += lineHeight; // Move to the next line
+          }
+          if (!manualLine.trim()) {
+            // Handle empty manual lines (just add line height)
             currentY += lineHeight;
-          });
+          }
         });
 
         ctx.restore();
@@ -453,13 +543,13 @@
           topBannerPadding = logoPadding / 2;
         }
 
-        // --- MODIFIED ---: Pre-calculate lines and banner height
+        // --- MODIFIED ---: Pre-calculate lines and banner height using the updated function
         let titleLines = 0;
         let subtitleLines = 0;
         let titleLineHeight = 0;
         let subtitleLineHeight = 0;
-        const tempCanvasWidth = userImage.width * resolutionMultiplier; // Use calculated width
-        const tempMaxWidth = tempCanvasWidth - logoPadding * 2; // Use calculated padding
+        const tempCanvasWidth = userImage.width * resolutionMultiplier;
+        const tempMaxWidth = tempCanvasWidth - logoPadding * 2;
 
         if (addTopBanner && (titleText || subtitleText)) {
           if (titleText) {
@@ -488,10 +578,12 @@
           }
 
           topBannerHeight =
-            topBannerPadding / 2 + // Top padding
+            topBannerPadding / 2 +
             titleLines * titleLineHeight +
             subtitleLines * subtitleLineHeight +
-            topBannerPadding; // Bottom padding
+            topBannerPadding;
+          // Add a little extra padding in case calculation is slightly off
+          topBannerHeight += 10 * resolutionMultiplier;
         }
 
         canvas.width = userImage.width * resolutionMultiplier;
@@ -507,10 +599,9 @@
         if (addTopBanner && topBannerHeight > 0) {
           const leftPadding = logoPadding;
           let currentY = topBannerPadding;
-          const maxWidth = canvas.width - leftPadding * 2; // Final maxWidth based on actual canvas
+          const maxWidth = canvas.width - leftPadding * 2;
 
           if (titleText) {
-            // Use pre-calculated titleLineHeight
             currentY = drawStyledText(
               ctx,
               titleText,
@@ -526,41 +617,65 @@
           }
 
           if (subtitleText) {
-            ctx.font = useFallbackFont
-              ? `500 ${subtitleSize}px Arial`
-              : `500 ${subtitleSize}px "Noto Sans Display"`;
-            ctx.fontStretch = "87.5%";
             ctx.fillStyle = "#101D3F";
             ctx.textAlign = "left";
             ctx.textBaseline = "top";
 
             const manualSubtitleLines = subtitleText.split("\n");
-            // Use pre-calculated subtitleLineHeight
 
             manualSubtitleLines.forEach((line) => {
-              ctx.font = useFallbackFont // Reset font before measuring
-                ? `500 ${subtitleSize}px Arial`
-                : `500 ${subtitleSize}px "Noto Sans Display"`;
-              ctx.fontStretch = "87.5%";
-              const metrics = ctx.measureText(line);
-
-              if (metrics.width > maxWidth) {
-                const middle = Math.floor(line.length / 2);
-                const splitPoint = line.lastIndexOf(" ", middle);
-                if (splitPoint !== -1) {
-                  const line1 = line.substring(0, splitPoint);
-                  const line2 = line.substring(splitPoint + 1);
-                  ctx.fillText(line1, leftPadding, currentY);
-                  currentY += subtitleLineHeight;
-                  ctx.fillText(line2, leftPadding, currentY);
-                  currentY += subtitleLineHeight;
-                } else {
-                  ctx.fillText(line, leftPadding, currentY);
-                  currentY += subtitleLineHeight;
-                }
-              } else {
-                ctx.fillText(line, leftPadding, currentY);
+              let remainingLine = line.trim();
+              if (!remainingLine) {
+                // Handle empty manual lines
                 currentY += subtitleLineHeight;
+                return;
+              }
+
+              while (remainingLine) {
+                ctx.font = useFallbackFont // Reset font before measuring
+                  ? `500 ${subtitleSize}px Arial`
+                  : `500 ${subtitleSize}px "Noto Sans Display"`;
+                ctx.fontStretch = "87.5%";
+
+                let words = remainingLine.split(" ");
+                let lineToDraw = "";
+                let testLine = "";
+
+                // Find the longest possible line that fits
+                for (let i = 0; i < words.length; i++) {
+                  testLine = lineToDraw
+                    ? lineToDraw + " " + words[i]
+                    : words[i];
+                  if (ctx.measureText(testLine).width > maxWidth && i > 0) {
+                    break;
+                  } else {
+                    lineToDraw = testLine;
+                  }
+                }
+                // Handle single long word
+                if (!lineToDraw && words.length > 0) {
+                  lineToDraw = words[0];
+                }
+
+                ctx.fillText(lineToDraw, leftPadding, currentY);
+                currentY += subtitleLineHeight;
+
+                // Update remainingLine
+                if (lineToDraw.length === remainingLine.length) {
+                  remainingLine = "";
+                } else {
+                  let startIndex = remainingLine.indexOf(lineToDraw);
+                  if (startIndex === 0) {
+                    remainingLine = remainingLine
+                      .substring(lineToDraw.length)
+                      .trim();
+                  } else {
+                    // Fallback if something weird happens
+                    remainingLine = remainingLine
+                      .substring(words[0].length)
+                      .trim();
+                  }
+                }
               }
             });
           }
