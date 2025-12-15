@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wdth,wght@87.5,100..900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Display:wdth,wght@87.5&Noto+Sans:wdth,wght@87.5,100..900&display=swap"
       rel="stylesheet"
     />
     <style>
@@ -567,7 +567,7 @@
           if (subtitleText) {
             const subtitleFontStyle = useFallbackFont
               ? `500 ${subtitleSize}px Arial`
-              : `500 ${subtitleSize}px "Noto Sans Display"`;
+              : `500 ${subtitleSize}px "Noto Sans"`;
             subtitleLines = calculateWrappedLines(
               ctx,
               subtitleText,
@@ -634,7 +634,7 @@
               while (remainingLine) {
                 ctx.font = useFallbackFont // Reset font before measuring
                   ? `500 ${subtitleSize}px Arial`
-                  : `500 ${subtitleSize}px "Noto Sans Display"`;
+                  : `500 ${subtitleSize}px "Noto Sans"`;
                 ctx.fontStretch = "87.5%";
 
                 let words = remainingLine.split(" ");
@@ -726,11 +726,11 @@
           if (userImage.width > 1000) {
             ctx.font = useFallbackFont
               ? `${fontSize}px Arial`
-              : `400 ${fontSize}px "Noto Sans Display"`;
+              : `500 ${fontSize}px "Noto Sans"`;
           } else {
             ctx.font = useFallbackFont
               ? `${fontSize}px Arial`
-              : `400 ${fontSize}px "Noto Sans Display"`;
+              : `500 ${fontSize}px "Noto Sans"`;
           }
 
           ctx.textAlign = "right";
