@@ -520,12 +520,12 @@
 
         if (userImage.width > 1000) {
           bottomBannerHeight = 100 * resolutionMultiplier;
-          logoPadding = 75 * resolutionMultiplier;
-          textPadding = 75 * resolutionMultiplier;
+          logoPadding = 100 * resolutionMultiplier;
+          textPadding = 100 * resolutionMultiplier;
         } else {
           bottomBannerHeight = 50 * resolutionMultiplier;
-          logoPadding = 37.5 * resolutionMultiplier;
-          textPadding = 37.5 * resolutionMultiplier;
+          logoPadding = 50 * resolutionMultiplier;
+          textPadding = 50 * resolutionMultiplier;
         }
 
         let topBannerHeight = 0;
@@ -726,11 +726,11 @@
           if (userImage.width > 1000) {
             ctx.font = useFallbackFont
               ? `${fontSize}px Arial`
-              : `300 ${fontSize}px "Noto Sans Display"`;
+              : `400 ${fontSize}px "Noto Sans Display"`;
           } else {
             ctx.font = useFallbackFont
               ? `${fontSize}px Arial`
-              : `300 ${fontSize}px "Noto Sans Display"`;
+              : `400 ${fontSize}px "Noto Sans Display"`;
           }
 
           ctx.textAlign = "right";
