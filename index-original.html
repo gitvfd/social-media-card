@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DImage Banner Generator</title>
+    <title>Image Banner Generator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -524,8 +524,8 @@
           textPadding = 100 * resolutionMultiplier;
         } else {
           bottomBannerHeight = 50 * resolutionMultiplier;
-          logoPadding = 25 * resolutionMultiplier;
-          textPadding = 25 * resolutionMultiplier;
+          logoPadding = 50 * resolutionMultiplier;
+          textPadding = 50 * resolutionMultiplier;
         }
 
         let topBannerHeight = 0;
@@ -730,7 +730,7 @@
           } else {
             ctx.font = useFallbackFont
               ? `${fontSize}px Arial`
-              : `400 ${fontSize}px "Noto SansDisplay"`;
+              : `400 ${fontSize}px "Noto Sans Display"`;
           }
 
           ctx.textAlign = "right";
