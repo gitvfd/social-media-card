@@ -130,38 +130,6 @@
       #download-link:hover {
         background-color: #218838;
       }
-      #custom-color-controls {
-        display: none;
-        margin-top: 0.75rem;
-        flex-direction: column;
-        gap: 0.6rem;
-      }
-      .color-input-row {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-      }
-      .color-input-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex: 1;
-      }
-      .color-input-group label {
-        margin-bottom: 0;
-        font-weight: 400;
-        font-size: 0.9rem;
-        white-space: nowrap;
-      }
-      input[type="color"] {
-        width: 40px;
-        height: 36px;
-        padding: 2px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
     </style>
   </head>
   <body>
@@ -338,31 +306,7 @@
           <option value="#D7EDFE">Sky</option>
           <option value="#3A062D">Berry</option>
           <option value="#FCEEFB">Lilac</option>
-          <option value="custom">Custom…</option>
         </select>
-        <div id="custom-color-controls">
-          <div class="color-input-row">
-            <div class="color-input-group">
-              <label for="custom-footer-color">Footer</label>
-              <input type="color" id="custom-footer-color" value="#101D40" />
-              <label for="custom-gradient-toggle" style="font-weight:400;font-size:0.85rem;margin-bottom:0;white-space:nowrap;">Gradient</label>
-              <input type="checkbox" id="custom-gradient-toggle" style="width:auto;margin:0;" />
-              <input type="color" id="custom-footer-color-end" value="#0073b0" title="Gradient end color" style="display:none;width:40px;" />
-            </div>
-            <div class="color-input-group">
-              <label for="custom-highlight-color">Highlight</label>
-              <input type="color" id="custom-highlight-color" value="#156df9" />
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:0.5rem;">
-            <input type="checkbox" id="hashtag-source-toggle" style="width:auto;margin:0;" />
-            <label for="hashtag-source-toggle" style="font-weight:400;font-size:0.9rem;margin-bottom:0;">Hashtag source <span class="annotation">(larger footer text)</span></label>
-          </div>
-          <div>
-            <label for="custom-logo-upload" style="font-weight:400;font-size:0.9rem;margin-bottom:0.25rem;">Right logo <span class="annotation">(PNG or SVG, optional)</span></label>
-            <input type="file" id="custom-logo-upload" accept="image/png,image/svg+xml" style="padding:0.3rem;" />
-          </div>
-        </div>
       </div>
       <div class="control-group">
         <label for="lang-picker">4. Choose a language</label>
@@ -403,29 +347,14 @@
           : "none";
       });
 
-      const customColorControls = document.getElementById("custom-color-controls");
-      const customFooterColor = document.getElementById("custom-footer-color");
-      const customHighlightColor = document.getElementById("custom-highlight-color");
-      const customGradientToggle = document.getElementById("custom-gradient-toggle");
-      const customFooterColorEnd = document.getElementById("custom-footer-color-end");
-      const customLogoUpload = document.getElementById("custom-logo-upload");
-      const hashtagSourceToggle = document.getElementById("hashtag-source-toggle");
-
-      colorPicker.addEventListener("change", () => {
-        customColorControls.style.display =
-          colorPicker.value === "custom" ? "flex" : "none";
-      });
-
-      customGradientToggle.addEventListener("change", () => {
-        customFooterColorEnd.style.display = customGradientToggle.checked ? "inline-block" : "none";
-      });
-
-      function isLightColor(hex) {
-        const r = parseInt(hex.slice(1, 3), 16);
-        const g = parseInt(hex.slice(3, 5), 16);
-        const b = parseInt(hex.slice(5, 7), 16);
-        return (r * 299 + g * 587 + b * 114) / 1000 > 128;
-      }
+      const colorsForBlackLogo = new Set([
+        "#E0F2FF",
+        "#FFDDBD",
+        "#FFD15C",
+        "#F2FFE5",
+        "#D7EDFE",
+        "#FCEEFB",
+      ]);
 
       // Color mapping: banner color -> highlight color
       const highlightColorMap = {
@@ -448,29 +377,13 @@
         const file = imageUploader.files[0];
         const text = textInput.value;
         lang = langPicker.value;
-        const color =
-          colorPicker.value === "custom"
-            ? customFooterColor.value
-            : colorPicker.value;
-        const colorEnd =
-          colorPicker.value === "custom" && customGradientToggle.checked
-            ? customFooterColorEnd.value
-            : null;
-        const customLogoSrc =
-          colorPicker.value === "custom" && customLogoUpload.files[0]
-            ? URL.createObjectURL(customLogoUpload.files[0])
-            : null;
-        const hashtagSource =
-          colorPicker.value === "custom" && hashtagSourceToggle.checked;
+        const color = colorPicker.value;
 
         const addTopBanner = addTopBannerCheckbox.checked;
         const titleText = titleInput.value; // Get value from textarea
         const subtitleText = subtitleInput.value; // Get value from textarea
         // Get highlight color from mapping based on banner color
-        const highlightColor =
-          colorPicker.value === "custom"
-            ? customHighlightColor.value
-            : highlightColorMap[color] || "#156df9";
+        const highlightColor = highlightColorMap[color] || "#156df9";
 
         if (!file) {
           alert("Please upload an image first.");
@@ -499,9 +412,6 @@
                   titleText,
                   subtitleText,
                   highlightColor,
-                  colorEnd,
-                  customLogoSrc,
-                  hashtagSource,
                 );
               })
               .catch((err) => {
@@ -519,9 +429,6 @@
                   titleText,
                   subtitleText,
                   highlightColor,
-                  colorEnd,
-                  customLogoSrc,
-                  hashtagSource,
                 );
               });
           };
@@ -704,9 +611,6 @@
         titleText = "",
         subtitleText = "",
         highlightColor = "#0073b0",
-        colorEnd = null,
-        customLogoSrc = null,
-        hashtagSource = false,
       ) {
         const resolutionMultiplier = 3;
 
@@ -785,27 +689,13 @@
             subtitleLineHeight = subtitleSize + 5 * resolutionMultiplier;
           }
 
-          // Measure actual font descent to handle cross-browser differences (Safari vs Chrome)
-          let titleDescent = 10 * resolutionMultiplier; // fallback
-          if (titleText) {
-            ctx.save();
-            ctx.font = useFallbackFont
-              ? `700 ${titleSize}px Arial`
-              : `700 ${titleSize}px "Noto Sans Display"`;
-            ctx.fontStretch = "87.5%";
-            const m = ctx.measureText("Qgjpqy");
-            if (m.actualBoundingBoxDescent !== undefined) {
-              titleDescent = m.actualBoundingBoxDescent + 5 * resolutionMultiplier;
-            }
-            ctx.restore();
-          }
-
           topBannerHeight =
             topBannerMargin / 2 +
             titleLines * titleLineHeight +
             subtitleLines * subtitleLineHeight +
-            topBannerMargin +
-            titleDescent;
+            topBannerMargin;
+          // Add a little extra padding in case calculation is slightly off
+          topBannerHeight += 10 * resolutionMultiplier;
         }
 
         canvas.width = userImage.width * resolutionMultiplier;
@@ -917,119 +807,112 @@
 
         // Only draw bottom banner and logo if text is provided
         if (text.trim()) {
-          if (colorEnd) {
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(1, colorEnd);
-            ctx.fillStyle = gradient;
-          } else {
-            ctx.fillStyle = color;
-          }
+          ctx.fillStyle = color;
           ctx.fillRect(0, bottomBannerY, canvas.width, bottomBannerHeight);
         }
 
         if (text.trim()) {
-          const loadImg = (src) =>
-            new Promise((resolve, reject) => {
-              const img = new Image();
-              img.onload = () => resolve(img);
-              img.onerror = reject;
-              img.src = src;
-            });
+          const oecdLogo = new Image();
+          oecdLogo.onload = () => {
+            var logoMaxHeight;
+            if (userImage.width > 1000) {
+              logoMaxHeight = 50 * resolutionMultiplier;
+            } else {
+              logoMaxHeight = 25 * resolutionMultiplier;
+            }
 
-          let oecdLogoSrc = "";
-          if (lang === "fr") {
-            oecdLogoSrc = isLightColor(color)
-              ? "logo/OCDE_logo_fr.svg"
-              : "logo/OECD logo FR White no tagline.svg";
-          } else {
-            oecdLogoSrc = isLightColor(color)
-              ? "logo/OECD_20cm_blue_notag.svg"
-              : "logo/OECD logo EN White no tagline.svg";
-          }
+            const logoAspectRatio = oecdLogo.width / oecdLogo.height;
+            const logoHeight = logoMaxHeight;
+            const logoWidth = logoHeight * logoAspectRatio;
+            const logoY = bottomBannerY + (bottomBannerHeight - logoHeight) / 2;
+            const logoX = logoPadding;
+            ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
 
-          Promise.all([
-            loadImg(oecdLogoSrc),
-            customLogoSrc ? loadImg(customLogoSrc) : Promise.resolve(null),
-          ])
-            .then(([oecdLogo, customLogo]) => {
-              const logoMaxHeight =
-                userImage.width > 1000
-                  ? 50 * resolutionMultiplier
-                  : 25 * resolutionMultiplier;
+            var textColor;
+            var fontSize;
+            if (userImage.width > 1000) {
+              textColor = colorsForBlackLogo.has(color) ? "#000000" : "#FFFFFF";
+              fontSize = 30 * resolutionMultiplier;
+            } else {
+              textColor = colorsForBlackLogo.has(color) ? "#000000" : "#FFFFFF";
+              fontSize = 15 * resolutionMultiplier;
+            }
 
-              // --- OECD logo (left) ---
-              const logoHeight = logoMaxHeight;
-              const logoWidth = logoHeight * (oecdLogo.width / oecdLogo.height);
-              const logoY = bottomBannerY + (bottomBannerHeight - logoHeight) / 2;
-              const logoX = logoPadding;
-              ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
+            ctx.fillStyle = textColor;
 
-              // --- Custom logo (right) ---
-              let customLogoWidth = 0;
-              if (customLogo) {
-                customLogoWidth = logoHeight * (customLogo.width / customLogo.height);
-                const customLogoX = canvas.width - logoPadding - customLogoWidth;
-                ctx.drawImage(customLogo, customLogoX, logoY, customLogoWidth, logoHeight);
-              }
-
-              // --- Banner text ---
-              const fontSize = userImage.width > 1000
-                ? (hashtagSource ? 50 : 30) * resolutionMultiplier
-                : (hashtagSource ? 25 : 15) * resolutionMultiplier;
-              const textColor = isLightColor(color) ? "#000000" : "#FFFFFF";
-              ctx.fillStyle = textColor;
+            if (userImage.width > 1000) {
               ctx.font = useFallbackFont
                 ? `${fontSize}px Arial`
                 : `400 ${fontSize}px "Noto Sans Display"`;
-              ctx.textAlign = "right";
+            } else {
+              ctx.font = useFallbackFont
+                ? `${fontSize}px Arial`
+                : `400 ${fontSize}px "Noto Sans Display"`;
+            }
 
-              // Right boundary shifts left when a custom logo is present
-              const textRightX = customLogo
-                ? canvas.width - logoPadding - customLogoWidth - 20 * resolutionMultiplier
-                : canvas.width - textPadding;
+            ctx.textAlign = "right";
 
-              const textMetrics = ctx.measureText(text);
-              const logoRightX = logoX + logoWidth;
-              const textLeftX = textRightX - textMetrics.width;
+            const textMetrics = ctx.measureText(text);
+            const logoRightX = logoX + logoWidth;
+            const textLeftX = canvas.width - textPadding - textMetrics.width;
 
-              if (textLeftX < logoRightX + 40 * resolutionMultiplier) {
-                ctx.textBaseline = "top";
-                const lineHeight =
-                  userImage.width > 1000
-                    ? 35 * resolutionMultiplier
-                    : 18 * resolutionMultiplier;
-                const blockHeight = lineHeight * 2;
-                const topPaddingForBlock = (bottomBannerHeight - blockHeight) / 2;
-                const textY1 = bottomBannerY + topPaddingForBlock;
+            if (textLeftX < logoRightX + 40 * resolutionMultiplier) {
+              ctx.textBaseline = "top";
+              var lineHeight =
+                userImage.width > 1000
+                  ? 35 * resolutionMultiplier
+                  : 18 * resolutionMultiplier;
+              const blockHeight = lineHeight * 2;
+              const topPaddingForBlock = (bottomBannerHeight - blockHeight) / 2;
+              const textY1 = bottomBannerY + topPaddingForBlock;
 
-                let line1 = "", line2 = "";
-                const middle = Math.floor(text.length / 2);
-                const splitPoint = text.lastIndexOf(" ", middle);
-                if (splitPoint !== -1) {
-                  line1 = text.substring(0, splitPoint);
-                  line2 = text.substring(splitPoint + 1);
-                } else {
-                  line1 = text;
-                }
-
-                ctx.fillText(line1, textRightX, textY1);
-                if (line2) {
-                  ctx.fillText(line2, textRightX, textY1 + lineHeight);
-                }
+              let line1 = "",
+                line2 = "";
+              const middle = Math.floor(text.length / 2);
+              const splitPoint = text.lastIndexOf(" ", middle);
+              if (splitPoint !== -1) {
+                line1 = text.substring(0, splitPoint);
+                line2 = text.substring(splitPoint + 1);
               } else {
-                ctx.textBaseline = "middle";
-                const textY = bottomBannerY + bottomBannerHeight / 2;
-                ctx.fillText(text, textRightX, textY);
+                line1 = text;
               }
 
-              downloadLink.download = newFilename;
-              downloadLink.href = canvas.toDataURL("image/png");
-              downloadLink.style.display = "inline-block";
-            })
-            .catch(() => {
-              alert("Error: Could not load one or more logos.");
-            });
+              ctx.fillText(line1, canvas.width - textPadding, textY1);
+              if (line2) {
+                ctx.fillText(
+                  line2,
+                  canvas.width - textPadding,
+                  textY1 + lineHeight,
+                );
+              }
+            } else {
+              ctx.textBaseline = "middle";
+              const textY = bottomBannerY + bottomBannerHeight / 2;
+              ctx.fillText(text, canvas.width - textPadding, textY);
+            }
+
+            downloadLink.download = newFilename;
+            downloadLink.href = canvas.toDataURL("image/png");
+            downloadLink.style.display = "inline-block";
+          };
+
+          oecdLogo.onerror = () => {
+            alert(
+              "Error: Could not load the logo. This is an unexpected error. Please try refreshing the page.",
+            );
+          };
+
+          let logoSrc = "";
+          if (lang === "fr") {
+            logoSrc = colorsForBlackLogo.has(color)
+              ? "logo/OCDE_logo_fr.svg"
+              : "logo/OECD logo FR White no tagline.svg";
+          } else {
+            logoSrc = colorsForBlackLogo.has(color)
+              ? "logo/OECD_20cm_blue_notag.svg"
+              : "logo/OECD logo EN White no tagline.svg";
+          }
+          oecdLogo.src = logoSrc;
         } else {
           // If no text, just show the download link
           downloadLink.download = newFilename;
