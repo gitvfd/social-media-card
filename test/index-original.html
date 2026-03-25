@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -12,8 +12,9 @@
     />
     <style>
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
         background-color: #f4f7f6;
         color: #333;
         display: flex;
@@ -144,7 +145,7 @@
               border-radius: 6px;
               box-sizing: border-box;
               font-size: 1rem;
-              font-family: 'Noto Sans Display', sans-serif;
+              font-family: &quot;Noto Sans Display&quot;, sans-serif;
             "
           ></textarea>
         </div>
@@ -170,7 +171,7 @@
               border-radius: 6px;
               box-sizing: border-box;
               font-size: 1rem;
-              font-family: 'Noto Sans Display', sans-serif;
+              font-family: &quot;Noto Sans Display&quot;, sans-serif;
             "
           ></textarea>
         </div>
@@ -179,7 +180,9 @@
       <div class="control-group">
         <label for="image-uploader"
           >1. Upload your image (PNG or SVG)
-          <span class="annotation"> Recommended width: 600px / height: 700px</span></label
+          <span class="annotation">
+            Recommended width: 600px / height: 700px</span
+          ></label
         >
         <input
           type="file"
@@ -245,13 +248,13 @@
       let lang;
 
       const addTopBannerCheckbox = document.getElementById(
-        "add-top-banner-checkbox"
+        "add-top-banner-checkbox",
       );
       const topBannerControls = document.getElementById("top-banner-controls");
-      const titleInput = document.getElementById("title-input"); // Now a textarea
-      const subtitleInput = document.getElementById("subtitle-input"); // Now a textarea
+      const titleInput = document.getElementById("title-input"); //  a textarea
+      const subtitleInput = document.getElementById("subtitle-input"); //  a textarea
       const highlightColorPicker = document.getElementById(
-        "highlight-color-picker"
+        "highlight-color-picker",
       );
 
       addTopBannerCheckbox.addEventListener("change", () => {
@@ -310,13 +313,13 @@
                   addTopBanner,
                   titleText,
                   subtitleText,
-                  highlightColor
+                  highlightColor,
                 );
               })
               .catch((err) => {
                 console.error("Font could not be loaded: ", err);
                 alert(
-                  "Could not load the custom font. Using Arial as a fallback."
+                  "Could not load the custom font. Using Arial as a fallback.",
                 );
                 createImage(
                   userImage,
@@ -327,7 +330,7 @@
                   addTopBanner,
                   titleText,
                   subtitleText,
-                  highlightColor
+                  highlightColor,
                 );
               });
           };
@@ -336,7 +339,7 @@
         reader.readAsDataURL(file);
       });
 
-      // --- MODIFIED --- Helper function to calculate lines needed with multi-line wrapping
+      // Helper function to calculate lines needed with multi-line wrapping
       function calculateWrappedLines(ctx, text, fontStyle, maxWidth) {
         let lineCount = 0;
         const manualLines = text.split("\n");
@@ -404,7 +407,7 @@
         return Math.max(1, lineCount); // Ensure at least 1 line is counted if text exists
       }
 
-      // --- MODIFIED ---: drawStyledText now handles multi-line wrapping
+      // drawStyledText now handles multi-line wrapping
       function drawStyledText(
         ctx,
         text,
@@ -415,7 +418,7 @@
         fontFamily,
         defaultColor,
         highlightColor,
-        maxWidth
+        maxWidth,
       ) {
         const manualLines = text.split("\n");
         let currentY = y;
@@ -444,7 +447,7 @@
               ctx.font = `700 ${fontSize}px "${fontFamily}"`;
               ctx.fontStretch = "87.5%";
               let testWidth = ctx.measureText(
-                testLineText.replace(/\*/g, "")
+                testLineText.replace(/\*/g, ""),
               ).width;
 
               if (testWidth > maxWidth && currentLineText.length > 0) {
@@ -510,7 +513,7 @@
         addTopBanner = false,
         titleText = "",
         subtitleText = "",
-        highlightColor = "#0073b0"
+        highlightColor = "#0073b0",
       ) {
         const resolutionMultiplier = 3;
 
@@ -543,7 +546,7 @@
           topBannerPadding = logoPadding / 2;
         }
 
-        // --- MODIFIED ---: Pre-calculate lines and banner height using the updated function
+        // Pre-calculate lines and banner height using the updated function
         let titleLines = 0;
         let subtitleLines = 0;
         let titleLineHeight = 0;
@@ -560,7 +563,7 @@
               ctx,
               titleText,
               titleFontStyle,
-              tempMaxWidth
+              tempMaxWidth,
             );
             titleLineHeight = titleSize + 5 * resolutionMultiplier;
           }
@@ -572,7 +575,7 @@
               ctx,
               subtitleText,
               subtitleFontStyle,
-              tempMaxWidth
+              tempMaxWidth,
             );
             subtitleLineHeight = subtitleSize + 5 * resolutionMultiplier;
           }
@@ -612,7 +615,7 @@
               "Noto Sans Display",
               "#101D40",
               highlightColor,
-              maxWidth
+              maxWidth,
             );
           }
 
@@ -687,7 +690,7 @@
           0,
           imageY,
           userImage.width * resolutionMultiplier,
-          userImage.height * resolutionMultiplier
+          userImage.height * resolutionMultiplier,
         );
 
         const bottomBannerY =
@@ -765,7 +768,7 @@
               ctx.fillText(
                 line2,
                 canvas.width - textPadding,
-                textY1 + lineHeight
+                textY1 + lineHeight,
               );
             }
           } else {
@@ -781,7 +784,7 @@
 
         oecdLogo.onerror = () => {
           alert(
-            "Error: Could not load the logo. This is an unexpected error. Please try refreshing the page."
+            "Error: Could not load the logo. This is an unexpected error. Please try refreshing the page.",
           );
         };
 

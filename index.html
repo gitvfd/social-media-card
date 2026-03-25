@@ -345,22 +345,64 @@
             <div class="color-input-group">
               <label for="custom-footer-color">Footer</label>
               <input type="color" id="custom-footer-color" value="#101D40" />
-              <label for="custom-gradient-toggle" style="font-weight:400;font-size:0.85rem;margin-bottom:0;white-space:nowrap;">Gradient</label>
-              <input type="checkbox" id="custom-gradient-toggle" style="width:auto;margin:0;" />
-              <input type="color" id="custom-footer-color-end" value="#0073b0" title="Gradient end color" style="display:none;width:40px;" />
+              <label
+                for="custom-gradient-toggle"
+                style="
+                  font-weight: 400;
+                  font-size: 0.85rem;
+                  margin-bottom: 0;
+                  white-space: nowrap;
+                "
+                >Gradient</label
+              >
+              <input
+                type="checkbox"
+                id="custom-gradient-toggle"
+                style="width: auto; margin: 0"
+              />
+              <input
+                type="color"
+                id="custom-footer-color-end"
+                value="#0073b0"
+                title="Gradient end color"
+                style="display: none; width: 40px"
+              />
             </div>
             <div class="color-input-group">
               <label for="custom-highlight-color">Highlight</label>
               <input type="color" id="custom-highlight-color" value="#156df9" />
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:0.5rem;">
-            <input type="checkbox" id="hashtag-source-toggle" style="width:auto;margin:0;" />
-            <label for="hashtag-source-toggle" style="font-weight:400;font-size:0.9rem;margin-bottom:0;">Hashtag source <span class="annotation">(larger footer text)</span></label>
+          <div style="display: flex; align-items: center; gap: 0.5rem">
+            <input
+              type="checkbox"
+              id="hashtag-source-toggle"
+              style="width: auto; margin: 0"
+            />
+            <label
+              for="hashtag-source-toggle"
+              style="font-weight: 400; font-size: 0.9rem; margin-bottom: 0"
+              >Hashtag source
+              <span class="annotation">(larger footer text)</span></label
+            >
           </div>
           <div>
-            <label for="custom-logo-upload" style="font-weight:400;font-size:0.9rem;margin-bottom:0.25rem;">Right logo <span class="annotation">(PNG or SVG, optional)</span></label>
-            <input type="file" id="custom-logo-upload" accept="image/png,image/svg+xml" style="padding:0.3rem;" />
+            <label
+              for="custom-logo-upload"
+              style="
+                font-weight: 400;
+                font-size: 0.9rem;
+                margin-bottom: 0.25rem;
+              "
+              >Right logo
+              <span class="annotation">(PNG or SVG, optional)</span></label
+            >
+            <input
+              type="file"
+              id="custom-logo-upload"
+              accept="image/png,image/svg+xml"
+              style="padding: 0.3rem"
+            />
           </div>
         </div>
       </div>
@@ -394,8 +436,8 @@
         "add-top-banner-checkbox",
       );
       const topBannerControls = document.getElementById("top-banner-controls");
-      const titleInput = document.getElementById("title-input"); // Now a textarea
-      const subtitleInput = document.getElementById("subtitle-input"); // Now a textarea
+      const titleInput = document.getElementById("title-input"); // a textarea
+      const subtitleInput = document.getElementById("subtitle-input"); // a textarea
 
       addTopBannerCheckbox.addEventListener("change", () => {
         topBannerControls.style.display = addTopBannerCheckbox.checked
@@ -403,13 +445,23 @@
           : "none";
       });
 
-      const customColorControls = document.getElementById("custom-color-controls");
+      const customColorControls = document.getElementById(
+        "custom-color-controls",
+      );
       const customFooterColor = document.getElementById("custom-footer-color");
-      const customHighlightColor = document.getElementById("custom-highlight-color");
-      const customGradientToggle = document.getElementById("custom-gradient-toggle");
-      const customFooterColorEnd = document.getElementById("custom-footer-color-end");
+      const customHighlightColor = document.getElementById(
+        "custom-highlight-color",
+      );
+      const customGradientToggle = document.getElementById(
+        "custom-gradient-toggle",
+      );
+      const customFooterColorEnd = document.getElementById(
+        "custom-footer-color-end",
+      );
       const customLogoUpload = document.getElementById("custom-logo-upload");
-      const hashtagSourceToggle = document.getElementById("hashtag-source-toggle");
+      const hashtagSourceToggle = document.getElementById(
+        "hashtag-source-toggle",
+      );
 
       colorPicker.addEventListener("change", () => {
         customColorControls.style.display =
@@ -417,7 +469,9 @@
       });
 
       customGradientToggle.addEventListener("change", () => {
-        customFooterColorEnd.style.display = customGradientToggle.checked ? "inline-block" : "none";
+        customFooterColorEnd.style.display = customGradientToggle.checked
+          ? "inline-block"
+          : "none";
       });
 
       function isLightColor(hex) {
@@ -530,7 +584,7 @@
         reader.readAsDataURL(file);
       });
 
-      // --- MODIFIED --- Helper function to calculate lines needed with multi-line wrapping
+      //  Helper function to calculate lines needed with multi-line wrapping
       function calculateWrappedLines(ctx, text, fontStyle, maxWidth) {
         let lineCount = 0;
         const manualLines = text.split("\n");
@@ -598,7 +652,7 @@
         return Math.max(1, lineCount); // Ensure at least 1 line is counted if text exists
       }
 
-      // --- MODIFIED ---: drawStyledText now handles multi-line wrapping
+      //  drawStyledText now handles multi-line wrapping
       function drawStyledText(
         ctx,
         text,
@@ -751,7 +805,7 @@
           topBannerMargin = logoPadding / 4;
         }
 
-        // --- MODIFIED ---: Pre-calculate lines and banner height using the updated function
+        //  Pre-calculate lines and banner height using the updated function
         let titleLines = 0;
         let subtitleLines = 0;
         let titleLineHeight = 0;
@@ -795,7 +849,8 @@
             ctx.fontStretch = "87.5%";
             const m = ctx.measureText("Qgjpqy");
             if (m.actualBoundingBoxDescent !== undefined) {
-              titleDescent = m.actualBoundingBoxDescent + 5 * resolutionMultiplier;
+              titleDescent =
+                m.actualBoundingBoxDescent + 5 * resolutionMultiplier;
             }
             ctx.restore();
           }
@@ -961,22 +1016,32 @@
               // --- OECD logo (left) ---
               const logoHeight = logoMaxHeight;
               const logoWidth = logoHeight * (oecdLogo.width / oecdLogo.height);
-              const logoY = bottomBannerY + (bottomBannerHeight - logoHeight) / 2;
+              const logoY =
+                bottomBannerY + (bottomBannerHeight - logoHeight) / 2;
               const logoX = logoPadding;
               ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
 
               // --- Custom logo (right) ---
               let customLogoWidth = 0;
               if (customLogo) {
-                customLogoWidth = logoHeight * (customLogo.width / customLogo.height);
-                const customLogoX = canvas.width - logoPadding - customLogoWidth;
-                ctx.drawImage(customLogo, customLogoX, logoY, customLogoWidth, logoHeight);
+                customLogoWidth =
+                  logoHeight * (customLogo.width / customLogo.height);
+                const customLogoX =
+                  canvas.width - logoPadding - customLogoWidth;
+                ctx.drawImage(
+                  customLogo,
+                  customLogoX,
+                  logoY,
+                  customLogoWidth,
+                  logoHeight,
+                );
               }
 
               // --- Banner text ---
-              const fontSize = userImage.width > 1000
-                ? (hashtagSource ? 50 : 30) * resolutionMultiplier
-                : (hashtagSource ? 25 : 15) * resolutionMultiplier;
+              const fontSize =
+                userImage.width > 1000
+                  ? (hashtagSource ? 50 : 30) * resolutionMultiplier
+                  : (hashtagSource ? 25 : 15) * resolutionMultiplier;
               const textColor = isLightColor(color) ? "#000000" : "#FFFFFF";
               ctx.fillStyle = textColor;
               ctx.font = useFallbackFont
@@ -986,7 +1051,10 @@
 
               // Right boundary shifts left when a custom logo is present
               const textRightX = customLogo
-                ? canvas.width - logoPadding - customLogoWidth - 20 * resolutionMultiplier
+                ? canvas.width -
+                  logoPadding -
+                  customLogoWidth -
+                  20 * resolutionMultiplier
                 : canvas.width - textPadding;
 
               const textMetrics = ctx.measureText(text);
@@ -1000,10 +1068,12 @@
                     ? 35 * resolutionMultiplier
                     : 18 * resolutionMultiplier;
                 const blockHeight = lineHeight * 2;
-                const topPaddingForBlock = (bottomBannerHeight - blockHeight) / 2;
+                const topPaddingForBlock =
+                  (bottomBannerHeight - blockHeight) / 2;
                 const textY1 = bottomBannerY + topPaddingForBlock;
 
-                let line1 = "", line2 = "";
+                let line1 = "",
+                  line2 = "";
                 const middle = Math.floor(text.length / 2);
                 const splitPoint = text.lastIndexOf(" ", middle);
                 if (splitPoint !== -1) {
