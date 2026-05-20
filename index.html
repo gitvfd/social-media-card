@@ -338,6 +338,7 @@
           <option value="#D7EDFE">Sky</option>
           <option value="#3A062D">Berry</option>
           <option value="#FCEEFB">Lilac</option>
+          <option value="oecd-event">OECD event</option>
           <option value="custom">Custom…</option>
         </select>
         <div id="custom-color-controls">
@@ -465,7 +466,9 @@
 
       colorPicker.addEventListener("change", () => {
         customColorControls.style.display =
-          colorPicker.value === "custom" ? "flex" : "none";
+          colorPicker.value === "custom" || colorPicker.value === "oecd-event"
+            ? "flex"
+            : "none";
       });
 
       customGradientToggle.addEventListener("change", () => {
@@ -502,29 +505,28 @@
         const file = imageUploader.files[0];
         const text = textInput.value;
         lang = langPicker.value;
-        const color =
-          colorPicker.value === "custom"
-            ? customFooterColor.value
-            : colorPicker.value;
+        const isCustomMode =
+          colorPicker.value === "custom" || colorPicker.value === "oecd-event";
+        const color = isCustomMode
+          ? customFooterColor.value
+          : colorPicker.value;
         const colorEnd =
-          colorPicker.value === "custom" && customGradientToggle.checked
+          isCustomMode && customGradientToggle.checked
             ? customFooterColorEnd.value
             : null;
         const customLogoSrc =
-          colorPicker.value === "custom" && customLogoUpload.files[0]
+          isCustomMode && customLogoUpload.files[0]
             ? URL.createObjectURL(customLogoUpload.files[0])
             : null;
-        const hashtagSource =
-          colorPicker.value === "custom" && hashtagSourceToggle.checked;
+        const hashtagSource = isCustomMode && hashtagSourceToggle.checked;
+        const overlapLogoMode = colorPicker.value === "oecd-event";
 
         const addTopBanner = addTopBannerCheckbox.checked;
-        const titleText = titleInput.value; // Get value from textarea
-        const subtitleText = subtitleInput.value; // Get value from textarea
-        // Get highlight color from mapping based on banner color
-        const highlightColor =
-          colorPicker.value === "custom"
-            ? customHighlightColor.value
-            : highlightColorMap[color] || "#156df9";
+        const titleText = titleInput.value;
+        const subtitleText = subtitleInput.value;
+        const highlightColor = isCustomMode
+          ? customHighlightColor.value
+          : highlightColorMap[color] || "#156df9";
 
         if (!file) {
           alert("Please upload an image first.");
@@ -556,6 +558,7 @@
                   colorEnd,
                   customLogoSrc,
                   hashtagSource,
+                  overlapLogoMode,
                 );
               })
               .catch((err) => {
@@ -576,6 +579,7 @@
                   colorEnd,
                   customLogoSrc,
                   hashtagSource,
+                  overlapLogoMode,
                 );
               });
           };
@@ -761,6 +765,7 @@
         colorEnd = null,
         customLogoSrc = null,
         hashtagSource = false,
+        overlapLogoMode = false,
       ) {
         const resolutionMultiplier = 1; //previously 2.5
 
@@ -776,16 +781,10 @@
           logoPadding = 50 * resolutionMultiplier;
           textPadding = 50 * resolutionMultiplier;
         }
-
-        // Set bottom banner height to 0 if no text is provided, but keep side margins
-        if (!text.trim()) {
-          bottomBannerHeight = 0;
-        } else {
-          bottomBannerHeight =
-            userImage.width > 1000
-              ? 100 * resolutionMultiplier
-              : 50 * resolutionMultiplier;
-        }
+        bottomBannerHeight =
+          userImage.width > 1000
+            ? 100 * resolutionMultiplier
+            : 50 * resolutionMultiplier;
 
         let topBannerHeight = 0;
         let titleSize;
@@ -970,20 +969,17 @@
         const bottomBannerY =
           topBannerHeight + userImage.height * resolutionMultiplier;
 
-        // Only draw bottom banner and logo if text is provided
-        if (text.trim()) {
-          if (colorEnd) {
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(1, colorEnd);
-            ctx.fillStyle = gradient;
-          } else {
-            ctx.fillStyle = color;
-          }
-          ctx.fillRect(0, bottomBannerY, canvas.width, bottomBannerHeight);
+        if (colorEnd) {
+          const gradient = ctx.createLinearGradient(0, 0, canvas.width, 0);
+          gradient.addColorStop(0, color);
+          gradient.addColorStop(1, colorEnd);
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = color;
         }
+        ctx.fillRect(0, bottomBannerY, canvas.width, bottomBannerHeight);
 
-        if (text.trim()) {
+        {
           const loadImg = (src) =>
             new Promise((resolve, reject) => {
               const img = new Image();
@@ -1021,20 +1017,33 @@
               const logoX = logoPadding;
               ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
 
-              // --- Custom logo (right) ---
-              const customLogoHeight =
-                userImage.width > 1000
-                  ? 75 * resolutionMultiplier
-                  : 37.5 * resolutionMultiplier;
-              
+              // --- Custom / OECD event logo (right) ---
               let customLogoWidth = 0;
               if (customLogo) {
-                customLogoWidth =
-                  customLogoHeight * (customLogo.width / customLogo.height);
-                const customLogoX =
-                  canvas.width - logoPadding - customLogoWidth;
-                const customLogoY =
-                  bottomBannerY + (bottomBannerHeight - customLogoHeight) / 2;
+                let customLogoHeight, customLogoX, customLogoY;
+                if (overlapLogoMode) {
+                  customLogoHeight = 1.5 * bottomBannerHeight;
+                  customLogoWidth =
+                    customLogoHeight * (customLogo.width / customLogo.height);
+                  customLogoX = canvas.width - logoPadding - customLogoWidth;
+                  const oecdBottomMargin =
+                    (bottomBannerHeight - logoHeight) / 2;
+                  customLogoY =
+                    bottomBannerY +
+                    bottomBannerHeight -
+                    oecdBottomMargin -
+                    customLogoHeight;
+                } else {
+                  customLogoHeight =
+                    userImage.width > 1000
+                      ? 75 * resolutionMultiplier
+                      : 37.5 * resolutionMultiplier;
+                  customLogoWidth =
+                    customLogoHeight * (customLogo.width / customLogo.height);
+                  customLogoX = canvas.width - logoPadding - customLogoWidth;
+                  customLogoY =
+                    bottomBannerY + (bottomBannerHeight - customLogoHeight) / 2;
+                }
                 ctx.drawImage(
                   customLogo,
                   customLogoX,
@@ -1107,11 +1116,6 @@
             .catch(() => {
               alert("Error: Could not load one or more logos.");
             });
-        } else {
-          // If no text, just show the download link
-          downloadLink.download = newFilename;
-          downloadLink.href = canvas.toDataURL("image/png");
-          downloadLink.style.display = "inline-block";
         }
       }
     </script>
