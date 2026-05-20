@@ -1022,18 +1022,25 @@
               ctx.drawImage(oecdLogo, logoX, logoY, logoWidth, logoHeight);
 
               // --- Custom logo (right) ---
+              const customLogoHeight =
+                userImage.width > 1000
+                  ? 75 * resolutionMultiplier
+                  : 37.5 * resolutionMultiplier;
+              
               let customLogoWidth = 0;
               if (customLogo) {
                 customLogoWidth =
-                  logoHeight * (customLogo.width / customLogo.height);
+                  customLogoHeight * (customLogo.width / customLogo.height);
                 const customLogoX =
                   canvas.width - logoPadding - customLogoWidth;
+                const customLogoY =
+                  bottomBannerY + (bottomBannerHeight - customLogoHeight) / 2;
                 ctx.drawImage(
                   customLogo,
                   customLogoX,
-                  logoY,
+                  customLogoY,
                   customLogoWidth,
-                  logoHeight,
+                  customLogoHeight,
                 );
               }
 
