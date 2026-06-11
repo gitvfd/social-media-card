@@ -32,17 +32,25 @@
         max-width: 600px;
         text-align: center;
       }
+      .header-banner {
+        background-color: #101d40;
+        width: calc(100% + 4rem);
+        margin: -2rem -2rem 2rem -2rem;
+        padding: 1.5rem 2rem;
+        border-radius: 12px 12px 0 0;
+        box-sizing: border-box;
+      }
       h1 {
         text-align: left;
-        color: #474747;
+        color: #ffffff;
         margin: 0;
         padding-bottom: 0;
       }
 
       h2 {
-        color: #474747;
-        margin-top: 0rem;
-        margin-bottom: 2rem;
+        color: #ffffff;
+        margin-top: 0.25rem;
+        margin-bottom: 0;
         text-align: left;
       }
       .control-group {
@@ -192,8 +200,10 @@
   </head>
   <body>
     <div id="app-container">
-      <h1>OECD Social Media Card Composer</h1>
-      <h2>This tool adds a branded footer to your SM-compliant chart</h2>
+      <div class="header-banner">
+        <h1>OECD Social Media Card Composer</h1>
+        <h2>Expert version for COM</h2>
+      </div>
 
       <div class="control-group">
         <label for="color-picker"
