@@ -106,19 +106,47 @@
         font-family: "Noto Sans Display", sans-serif;
       }
       button {
-        background-color: #0073b0;
+        background-color: #156df9;
         color: white;
-        border: none;
+        border: 1px solid #156df9;
         padding: 0.8rem 1.5rem;
         border-radius: 6px;
         font-size: 1rem;
         font-weight: 600;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition:
+          background-color 0.3s,
+          color 0.3s;
         width: 100%;
       }
-      button:hover {
-        background-color: #005a8c;
+      button:hover:not(:disabled) {
+        background-color: white;
+        color: #156df9;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .download-result-link {
+        display: block;
+        margin-top: 0.5rem;
+        padding: 0.6rem 1rem;
+        background: rgba(21, 109, 249, 0.75);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        text-align: center;
+        border: 1px solid transparent;
+        transition:
+          background 0.3s,
+          color 0.3s,
+          border-color 0.3s;
+      }
+      .download-result-link:hover {
+        background: white;
+        color: #156df9;
+        border-color: #156df9;
       }
       #result-container {
         margin-top: 2rem;
@@ -127,20 +155,6 @@
         max-width: 100%;
         border-radius: 8px;
         border: 1px solid #eee;
-      }
-      #download-link {
-        display: none;
-        margin-top: 1rem;
-        background-color: #28a745;
-        color: white;
-        padding: 0.8rem 1.5rem;
-        border-radius: 6px;
-        text-decoration: none;
-        font-weight: 600;
-        transition: background-color 0.3s;
-      }
-      #download-link:hover {
-        background-color: #218838;
       }
       #custom-color-controls {
         display: none;
@@ -204,6 +218,8 @@
           <option value="#D7EDFE">Sky</option>
           <option value="#3A062D">Berry</option>
           <option value="#FCEEFB">Lilac</option>
+          <option value="oecd-event">OECD event</option>
+          <option value="custom">Custom…</option>
         </select>
         <div id="custom-color-controls">
           <div class="color-input-row">
@@ -422,6 +438,27 @@
           id="image-uploader"
           accept="image/png, image/svg+xml"
         />
+        <input
+          type="file"
+          id="extra-image-uploader"
+          accept="image/png, image/svg+xml"
+          style="display: none"
+        />
+        <div id="file-list" style="margin-top: 0.5rem"></div>
+        <button
+          type="button"
+          id="add-image-btn"
+          style="
+            display: none;
+            margin-top: 0.5rem;
+            width: auto;
+            padding: 0.4rem 1rem;
+            font-size: 0.9rem;
+            background-color: #6c757d;
+          "
+        >
+          + Add another image
+        </button>
       </div>
 
       <div class="control-group">
@@ -453,24 +490,100 @@
           <option value="fr">OCDE</option>
         </select>
       </div>
-      <button id="generate-btn">Generate Image</button>
+      <button id="generate-btn">Generate Images</button>
 
       <div id="result-container">
-        <canvas id="image-canvas"></canvas>
-        <a id="download-link" href="#">Download Image</a>
+        <canvas id="image-canvas" style="display: none"></canvas>
+        <div id="results-list"></div>
+        <button
+          type="button"
+          id="download-all-btn"
+          style="display: none; margin-top: 1rem"
+        >
+          Download All Images
+        </button>
       </div>
     </div>
 
     <script>
       const imageUploader = document.getElementById("image-uploader");
+      const extraImageUploader = document.getElementById(
+        "extra-image-uploader",
+      );
+      const addImageBtn = document.getElementById("add-image-btn");
+      const fileListEl = document.getElementById("file-list");
       const textInput = document.getElementById("text-input");
       const colorPicker = document.getElementById("color-picker");
       const langPicker = document.getElementById("lang-picker");
       const generateBtn = document.getElementById("generate-btn");
       const canvas = document.getElementById("image-canvas");
       const ctx = canvas.getContext("2d");
-      const downloadLink = document.getElementById("download-link");
+      const resultsListEl = document.getElementById("results-list");
+      const downloadAllBtn = document.getElementById("download-all-btn");
       let lang;
+      let selectedFiles = [];
+      let generatedLinks = [];
+
+      function renderFileList() {
+        fileListEl.innerHTML = "";
+        selectedFiles.forEach((file, i) => {
+          const row = document.createElement("div");
+          row.style.cssText =
+            "display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;font-size:0.9rem;";
+          const name = document.createElement("span");
+          name.textContent = file.name;
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.textContent = "✕";
+          removeBtn.dataset.index = i;
+          removeBtn.style.cssText =
+            "background:#dc3545;padding:0.1rem 0.5rem;font-size:0.75rem;width:auto;";
+          row.appendChild(name);
+          row.appendChild(removeBtn);
+          fileListEl.appendChild(row);
+        });
+        addImageBtn.style.display =
+          selectedFiles.length > 0 ? "inline-block" : "none";
+      }
+
+      imageUploader.addEventListener("change", () => {
+        if (imageUploader.files[0]) {
+          selectedFiles = [imageUploader.files[0]];
+          renderFileList();
+        }
+      });
+
+      addImageBtn.addEventListener("click", () => {
+        extraImageUploader.value = "";
+        extraImageUploader.click();
+      });
+
+      extraImageUploader.addEventListener("change", () => {
+        if (extraImageUploader.files[0]) {
+          selectedFiles.push(extraImageUploader.files[0]);
+          renderFileList();
+        }
+      });
+
+      fileListEl.addEventListener("click", (e) => {
+        if (e.target.dataset.index !== undefined) {
+          selectedFiles.splice(parseInt(e.target.dataset.index), 1);
+          renderFileList();
+        }
+      });
+
+      downloadAllBtn.addEventListener("click", () => {
+        generatedLinks.forEach((item, i) => {
+          setTimeout(() => {
+            const a = document.createElement("a");
+            a.href = item.href;
+            a.download = item.filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          }, i * 300);
+        });
+      });
 
       const addTopBannerCheckbox = document.getElementById(
         "add-top-banner-checkbox",
@@ -541,7 +654,11 @@
       };
 
       generateBtn.addEventListener("click", () => {
-        const file = imageUploader.files[0];
+        if (selectedFiles.length === 0) {
+          alert("Please upload an image first.");
+          return;
+        }
+
         const text = textInput.value;
         lang = langPicker.value;
         const isCustomMode =
@@ -559,7 +676,6 @@
             : null;
         const hashtagSource = isCustomMode && hashtagSourceToggle.checked;
         const overlapLogoMode = colorPicker.value === "oecd-event";
-
         const addTopBanner = addTopBannerCheckbox.checked;
         const titleText = titleInput.value;
         const subtitleText = subtitleInput.value;
@@ -567,64 +683,91 @@
           ? customHighlightColor.value
           : highlightColorMap[color] || "#156df9";
 
-        if (!file) {
-          alert("Please upload an image first.");
-          return;
+        resultsListEl.innerHTML = "";
+        generatedLinks = [];
+        downloadAllBtn.style.display = "none";
+        canvas.style.display = "none";
+        generateBtn.disabled = true;
+        generateBtn.textContent = "Generating…";
+
+        function processFile(index) {
+          if (index >= selectedFiles.length) {
+            generateBtn.disabled = false;
+            generateBtn.textContent = "Generate Images";
+            if (generatedLinks.length > 1) {
+              downloadAllBtn.style.display = "block";
+            }
+            return;
+          }
+
+          const file = selectedFiles[index];
+          const base =
+            file.name.substring(0, file.name.lastIndexOf(".")) || file.name;
+          const newFilename = `${base}_SM.png`;
+
+          const onComplete = (dataURL, filename) => {
+            if (selectedFiles.length === 1) {
+              canvas.style.display = "block";
+            }
+            const link = document.createElement("a");
+            link.href = dataURL;
+            link.download = filename;
+            link.textContent = `Download ${filename}`;
+            link.className = "download-result-link";
+            resultsListEl.appendChild(link);
+            generatedLinks.push({ href: dataURL, filename });
+            processFile(index + 1);
+          };
+
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const userImage = new Image();
+            userImage.onload = () => {
+              document.fonts.ready
+                .then(() => {
+                  createImage(
+                    userImage,
+                    text,
+                    color,
+                    newFilename,
+                    false,
+                    addTopBanner,
+                    titleText,
+                    subtitleText,
+                    highlightColor,
+                    colorEnd,
+                    customLogoSrc,
+                    hashtagSource,
+                    overlapLogoMode,
+                    onComplete,
+                  );
+                })
+                .catch((err) => {
+                  console.error("Font could not be loaded: ", err);
+                  createImage(
+                    userImage,
+                    text,
+                    color,
+                    newFilename,
+                    true,
+                    addTopBanner,
+                    titleText,
+                    subtitleText,
+                    highlightColor,
+                    colorEnd,
+                    customLogoSrc,
+                    hashtagSource,
+                    overlapLogoMode,
+                    onComplete,
+                  );
+                });
+            };
+            userImage.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
         }
 
-        const originalFilename = file.name;
-        const nameWithoutExtension =
-          originalFilename.substring(0, originalFilename.lastIndexOf(".")) ||
-          originalFilename;
-        const newFilename = `${nameWithoutExtension}_SM.png`;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const userImage = new Image();
-          userImage.onload = () => {
-            document.fonts.ready
-              .then(() => {
-                createImage(
-                  userImage,
-                  text,
-                  color,
-                  newFilename,
-                  false,
-                  addTopBanner,
-                  titleText,
-                  subtitleText,
-                  highlightColor,
-                  colorEnd,
-                  customLogoSrc,
-                  hashtagSource,
-                  overlapLogoMode,
-                );
-              })
-              .catch((err) => {
-                console.error("Font could not be loaded: ", err);
-                alert(
-                  "Could not load the custom font. Using Arial as a fallback.",
-                );
-                createImage(
-                  userImage,
-                  text,
-                  color,
-                  newFilename,
-                  true,
-                  addTopBanner,
-                  titleText,
-                  subtitleText,
-                  highlightColor,
-                  colorEnd,
-                  customLogoSrc,
-                  hashtagSource,
-                  overlapLogoMode,
-                );
-              });
-          };
-          userImage.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        processFile(0);
       });
 
       //  Helper function to calculate lines needed with multi-line wrapping
@@ -805,6 +948,7 @@
         customLogoSrc = null,
         hashtagSource = false,
         overlapLogoMode = false,
+        onComplete = null,
       ) {
         const resolutionMultiplier = 1; //previously 2.5
 
@@ -1148,9 +1292,10 @@
                 ctx.fillText(text, textRightX, textY);
               }
 
-              downloadLink.download = newFilename;
-              downloadLink.href = canvas.toDataURL("image/png");
-              downloadLink.style.display = "inline-block";
+              const dataURL = canvas.toDataURL("image/png");
+              if (onComplete) {
+                onComplete(dataURL, newFilename);
+              }
             })
             .catch(() => {
               alert("Error: Could not load one or more logos.");
